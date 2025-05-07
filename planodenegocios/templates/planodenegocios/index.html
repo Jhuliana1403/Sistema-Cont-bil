@@ -1,0 +1,102 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="shortcut icon" href="{% static 'img/logo.png' %}" type="image/x-icon">
+  <title>Empreenda+</title>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-100 text-gray-800">
+  <header class="bg-blue-600 text-white p-4 shadow-md">
+    <img src="{% static 'img/logo-inicial.png' %}" alt="">
+    <h1 class="text-2xl font-bold">Empreenda+</h1>
+    <h4>Plano de Negócio</h4>
+  </header>
+
+  <main class="p-6 max-w-6xl mx-auto">
+    <nav class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+
+      <button class="bg-white p-4 rounded-xl shadow hover:bg-blue-100">
+        <h2 class="font-semibold text-lg">Resumo Executivo</h2>
+      </button>
+
+      <button class="bg-white p-4 rounded-xl shadow hover:bg-blue-100">
+        <h2 class="font-semibold text-lg">Negócio</h2>
+        <ul class="mt-2 text-sm list-disc ml-5">
+          <li>Histórico e Motivação</li>
+          <li>Modelo de Negócio</li>
+        </ul>
+      </button>
+
+      <button class="bg-white p-4 rounded-xl shadow hover:bg-blue-100">
+        <h2 class="font-semibold text-lg">Produtos e Serviços</h2>
+        <ul class="mt-2 text-sm list-disc ml-5">
+          <li>Características e Benefícios</li>
+          <li>Estágio de Desenvolvimento</li>
+        </ul>
+      </button>
+
+      <button class="bg-white p-4 rounded-xl shadow hover:bg-blue-100">
+        <h2 class="font-semibold text-lg">Ambiente de Mercado</h2>
+        <ul class="mt-2 text-sm list-disc ml-5">
+          <li>Análise do Setor</li>
+          <li>O Mercado Potencial</li>
+          <li>Análise da Concorrência</li>
+        </ul>
+      </button>
+
+      <button class="bg-white p-4 rounded-xl shadow hover:bg-blue-100">
+        <h2 class="font-semibold text-lg">Estratégias de Marketing</h2>
+        <ul class="mt-2 text-sm list-disc ml-5">
+          <li>Posicionamento</li>
+          <li>Foco e Segmentação</li>
+          <li>Plano de Penetração no Mercado</li>
+          <li>Distribuição e Comercialização</li>
+        </ul>
+      </button>
+
+      <button class="bg-white p-4 rounded-xl shadow hover:bg-blue-100">
+        <h2 class="font-semibold text-lg">Administração e Gestão</h2>
+        <ul class="mt-2 text-sm list-disc ml-5">
+          <li>Produção, Localização e Instalações</li>
+          <li>Estrutura Legal e Societária</li>
+          <li>Equipe e Parcerias</li>
+          <li>Pesquisa, Inovação e Qualidade</li>
+        </ul>
+      </button>
+
+      <button class="bg-white p-4 rounded-xl shadow hover:bg-blue-100">
+        <h2 class="font-semibold text-lg">Plano de Implantação</h2>
+        <ul class="mt-2 text-sm list-disc ml-5">
+          <li>Análise de Riscos</li>
+          <li>Fatores Críticos de Sucesso</li>
+          <li>Alternativas Estratégicas</li>
+        </ul>
+      </button>
+
+      <button class="bg-white p-4 rounded-xl shadow hover:bg-blue-100">
+        <h2 class="font-semibold text-lg">Plano Financeiro</h2>
+        <ul class="mt-2 text-sm list-disc ml-5">
+          <li>Investimentos</li>
+          <li>Receitas e Despesas</li>
+          <li>Projeções e Resultados</li>
+        </ul>
+      </button>
+
+      <button class="bg-white p-4 rounded-xl shadow hover:bg-blue-100">
+        <h2 class="font-semibold text-lg">Anexo - Projeções Financeiras</h2>
+        <ul class="mt-2 text-sm list-disc ml-5">
+          <li>Planilhas e Relatórios</li>
+        </ul>
+      </button>
+
+    </nav>
+  </main>
+
+  <footer class="bg-blue-600 text-white p-4 text-center">
+    <p>&copy; 2025 MakeMoney. Todos os direitos reservados.</p>
+  </footer>
+</body>
+</html>
