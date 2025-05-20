@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block conteudo %}
+<!-- Conteúdo -->
+<div class="content d-flex flex-column">
+  <h3>Mercado Potencial</h3>
+  <div class="editor-area" contenteditable="true" placeholder="Digite aqui o conteúdo do seu plano de negócio..."></div>
+
+  <div class="footer-notes mt-auto">
+    <strong>Suporte á edição - Orientação:</strong> 
+    <ul>
+      <li>Informe em qual área se concentra o negócio; para quem ele produz, vende ou presta serviços.</li>
+      <li>Quais as características gerais do público que pode se beneficiar de seus produtos ou serviços?</li>
+      <li>Qual o tamanho do mercado potencial (local, regional, nacional) em termos de volume de vendas e/ou  número de clientes em potencia?. É um mercado em crescimento, estabilizado ou em declínio?</li>
+      <li>O negócio é afetado pela sazonalidade, ou seja, por diferenças no volume de vendas em diferentes períodos do ano?
+    </li>
+      
+    </ul>
+  </div>
+</div>
+{% endblock conteudo %}
+
+{% block extra_js %}
+  <script src="{% static 'js/sidebar.js' %}"></script>
+{% endblock extra_js %}

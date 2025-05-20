@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block conteudo %}
+<!-- Conteúdo -->
+<div class="content d-flex flex-column">
+  <h3>O Ambiente De Negocio</h3>
+  <div class="editor-area" contenteditable="true" placeholder="Digite aqui o conteúdo do seu plano de negócio..."></div>
+
+  <div class="footer-notes mt-auto">
+    <strong>Suporte á edição - Orientação:</strong> 
+        
+    <ul>
+      <li>Faça uma radiografia do setor que a empresa está ou irá atuar. </li>
+      <li>indentifique e apresente as características mais relevantes (informações demográficas, econômicas, legais, políticas, tecnológicas ou culturais).</li>
+      <li>Quais as tendências de mercado? Que mudanças tecnológicas ou na forma de fazer negócio tem afetado positiva ou negativamente esse setor?</li>
+      <li>Há predominância de pequenas ou grandes empresas? As empresas desse setor são lucrativas? Quais são as empresas líderes? </li>
+      
+    </ul>
+  </div>
+</div>
+{% endblock conteudo %}
+
+{% block extra_js %}
+  <script src="{% static 'js/sidebar.js' %}"></script>
+{% endblock extra_js %}
