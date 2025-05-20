@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block conteudo %}
+<!-- Conteúdo -->
+<div class="content d-flex flex-column">
+  <div class="editor-area" contenteditable="true" placeholder="Digite aqui o seu plano de penetração no mercado..."></div>
+
+  <div class="footer-notes mt-auto">
+    <strong>Orientação:</strong> 
+    <p>Quais as fatias segmentadas de mercado a empresa irá priorizar? Porque?
+
+    Qual o tamanho desses segmentos de mercado? Quais fatores influenciam ou podem influenciar na aquisição e consumo do produto/serviço?
+
+    Lembre-se de que aqui você deve considerar os consumidores finais do seu produto/serviço, o público que irá usufruir diretamente deles e gerar demanda.  
+    </p>
+  </div>
+</div>
+{% endblock conteudo %}
+
+{% block extra_js %}
+  <script src="{% static 'js/sidebar.js' %}"></script>
+{% endblock extra_js %}

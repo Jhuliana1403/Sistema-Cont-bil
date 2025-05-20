@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block conteudo %}
+<!-- Conteúdo -->
+<div class="content d-flex flex-column">
+  <div class="editor-area" contenteditable="true" placeholder="Digite aqui a sua distribuição e comercialização..."></div>
+
+  <div class="footer-notes mt-auto">
+    <strong>Orientação:</strong> 
+    <p>Onde os clientes encontrarão o produto/serviço oferecido por sua empresa? 
+    Como o público tomará conhecimento da existência deles? Como, onde e por quem será feita a divulgação? 
+    E a comercialização? Que canais de distribuição serão utilizados para que o produto chegue ao cliente (varejistas, atacadistas, ...)? 
+    A pesquisa que definiu o perfil dos consumidores mostrou que esses são os meios mais adequados? 
+    Quais serão os custos e benefícios envolvidos? 
+    Para o caso de imprevistos e falhas na rede de distribuição, haverá alguma alternativa?
+    Como será estruturada a sua força de vendas? Vendedores próprios ou equipe externa? Como serão remunerados?
+    Como a concorrência distribui seus produtos? No que ela é melhor que sua empresa? O que fazer para superá-la? 
+    </p>
+  </div>
+</div>
+{% endblock conteudo %}
+
+{% block extra_js %}
+  <script src="{% static 'js/sidebar.js' %}"></script>
+{% endblock extra_js %}

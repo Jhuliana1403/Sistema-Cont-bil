@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block conteudo %}
+<!-- Conteúdo -->
+<div class="content d-flex flex-column">
+  <div class="editor-area" contenteditable="true" placeholder="Digite aqui o seu posicionamento..."></div>
+
+  <div class="footer-notes mt-auto">
+    <strong>Orientação:</strong> O posicionamento é o modo de a empresa marcar presença e se distinguir da concorrência.
+    <p>Como a empresa deseja ser reconhecida pelo mercado? Que imagem deseja passar? Como a empresa deseja que seus produtos 
+    e serviços sejam reconhecidos pelo mercado?
+    Dentre as possíveis estratégias de posicionamento(melhor qualidade; melhor atendimento; preço mais baixo; maior valor para o cliente;
+    maior segurança; maior rapidez; mais personalizado; mais prático; de tecnologia mais avançada; etc), indique e justifique pela empresa.
+    Como a empresa fará para que essa imagem seja percebida pelos clientes?
+    </p>
+  </div>
+</div>
+{% endblock conteudo %}
+
+{% block extra_js %}
+  <script src="{% static 'js/sidebar.js' %}"></script>
+{% endblock extra_js %}
