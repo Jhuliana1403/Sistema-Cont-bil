@@ -12,7 +12,8 @@
       </strong>
       <div class="sidebar-item-content">
         <ul>
-          <li>Clique aqui para detalhar O Negócio...</li>
+          <li><a href="{% url 'historico' %}">Histórico e Motivação</a></li>
+          <li><a href="{% url 'modelo' %}">Modelo de Negócio</a></li>
         </ul>
       </div>
     </li>
@@ -22,8 +23,9 @@
       </strong>
       <div class="sidebar-item-content">
         <ul>
-          <li>Clique aqui para detalhar Produtos e Serviços...</li>
-        </ul>
+            <li><a href="{% url 'caracteristicas' %}">Características e Benefícios</a></li>
+            <li><a href="{% url 'estagio' %}">Estágio de Desenvolvimento</a></li>
+        </ul>     
       </div>
     </li>
     <li class="sidebar-item">
@@ -32,17 +34,9 @@
       </strong>
       <div class="sidebar-item-content">
         <ul>
-          <li>Clique aqui para detalhar O Ambiente de Negócio...</li>
-          <a href="{% url 'analise_setor' %}" class="sidebar-item-title">
-            <i class="bi bi-play-fill sidebar-icon"></i>
-            <span>Análise de Setor</span>
-          <a href="{% url 'mercado_potencial' %}" class="sidebar-item-title">
-            <i class="bi bi-play-fill sidebar-icon"></i>
-            <span>Mercado Potencial</span>
-          <a href="{% url 'analise_concorrencia' %}" class="sidebar-item-title">
-            <i class="bi bi-play-fill sidebar-icon"></i>
-              <span>Análise de Concorrência</span>
-          </a>
+          <li><a href="{% url 'analise_setor' %}">Análise de Setor</a></li>
+          <li><a href="{% url 'mercado_potencial' %}">Mercado Potencial</a></li>
+          <li><a href="{% url 'analise_concorrencia' %}">Análise de Concorrência</a></li>
         </ul>
       </div>
     </li>

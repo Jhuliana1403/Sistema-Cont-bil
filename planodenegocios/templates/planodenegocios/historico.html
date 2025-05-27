@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block conteudo %}
+<!-- Conteúdo -->
+<div class="content d-flex flex-column">
+  <h3>Histórico e Motivação</h3>
+  <div class="editor-area" contenteditable="true" placeholder="Digite aqui o conteúdo do seu plano de negócio..."></div>
+
+  <div class="footer-notes mt-auto">
+    <strong>Suporte á edição - Orientação</strong> 
+     Deixe claro se é uma empresa nascente, emergente ou consolidada.
+
+    <ul>
+      <li>Se é uma nova empresa, explique como surgiu a idéia de negócio e a motivação para empreender. Por que esse negócio? Ele tem a ver com o que os empreendedores gostam de fazer, com suas habilidades e seus conhecimentos?  </li>
+      <li>Se a empresa já existe, relate como foi a sua evolução, as conquistas importantes, as alianças, como se deu o crescimento e as principais estratégias e conquistas já alcançadas. Mostre como o empreendimento está posicionado no mercado. O que ele já produziu, seu público-alvo, as estratégias e concorrentes atuais. Em que medida os novos produtos e serviços propostos contribuirão para o aumento de faturamento e lucratividade?</li>
+    </ul>
+  </div>
+</div>
+{% endblock conteudo %}
+
+{% block extra_js %}
+  <script src="{% static 'js/sidebar.js' %}"></script>
+{% endblock extra_js %}

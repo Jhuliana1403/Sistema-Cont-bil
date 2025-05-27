@@ -11,4 +11,8 @@ urlpatterns = [
     path('marketing/focosegmentacao', views.foco, name='foco'),
     path('marketing/plano', views.plano, name='plano'),
     path('marketing/distribuicao', views.distribuicao, name='distribuicao'),
+    path('historico/', views.historico, name='historico'),
+    path('modelo/', views.modelo, name='modelo'),
+    path('caracteristicas/', views.caracteristicas, name='caracteristicas'),
+    path('estagio/', views.estagio, name='estagio'),
 ]
