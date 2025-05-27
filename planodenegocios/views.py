@@ -14,3 +14,24 @@ def plano(request):
 
 def distribuicao(request):
     return render(request, 'planodenegocios/distribuicao.html')
+
+def analise_setor(request):
+    return render(request, 'planodenegocios/analise_setor.html')
+
+def mercado_potencial(request):
+    return render(request, 'planodenegocios/mercado_potencial.html')
+
+def analise_concorrencia(request):
+    return render(request, 'planodenegocios/analise_concorrencia.html')
+
+def historico(request):
+    return render(request, 'planodenegocios/historico.html')
+
+def modelo(request):
+    return render(request, 'planodenegocios/modelo.html')
+
+def caracteristicas(request):
+    return render(request, 'planodenegocios/caracteristicas.html')
+
+def estagio(request):
+    return render(request, 'planodenegocios/estagio.html')

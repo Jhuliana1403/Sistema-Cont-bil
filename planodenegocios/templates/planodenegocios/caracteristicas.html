@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block conteudo %}
+<!-- Conteúdo -->
+<div class="content d-flex flex-column">
+  <h3>Caracteríticas e Benefícios</h3>
+  <div class="editor-area" contenteditable="true" placeholder="Digite aqui o conteúdo do seu plano de negócio..."></div>
+
+  <div class="footer-notes mt-auto">
+    <strong>Suporte á edição - Orientação</strong> 
+    Descreva os produtos e ou serviços e suas principais características. Utilizam alguma tecnologia especial?
+
+    <ul>
+      <li>Qual a proposta de valor para o cliente. Ou seja, para que eles servem e por que os clientes pagarão para tê-los. Quais as vantagens e benefícios exclusivos dos produtos/serviços oferecidos aos clientes. Por que os clientes escolheriam os produtos/serviços da empresa em detrimento aos dos concorrentes.</li>
+      <li>O produto é uma novidade para o mercado? É um item de luxo ou necessidade básica? Resolve um problema ou demanda concreta ou tenta criar um novo mercado?</li>
+    </ul>
+  </div>
+</div>
+{% endblock conteudo %}
+
+{% block extra_js %}
+  <script src="{% static 'js/sidebar.js' %}"></script>
+{% endblock extra_js %}
