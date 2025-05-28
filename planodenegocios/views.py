@@ -44,3 +44,6 @@ def caracteristicas(request):
 
 def estagio(request):
     return render(request, 'planodenegocios/estagio.html')
+
+def investimento(request):
+    return render(request, 'planodenegocios/investimento.html')
