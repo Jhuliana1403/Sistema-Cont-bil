@@ -16,7 +16,7 @@ body {
 
 /* ===== SIDEBAR ===== */
 .sidebar {
-  width: 280px;
+  max-width: 280px;
   background-color: #1e1e2f;
   color: #f1f3f5;
   padding: 2rem 1.5rem;
@@ -25,6 +25,7 @@ body {
   display: flex;
   flex-direction: column;
   justify-content: flex-start;
+  scrollbar-gutter: stable;
 }
 
 /* Cabeçalho da sidebar */
@@ -148,10 +149,15 @@ body {
   transition: background 0.3s ease;
 }
 
-.logo-img{
-  height: 10%;
-  width: 90%;
+.logo-img {
+  width: 200px;    /* largura fixa */
+  height: auto;    /* mantém proporção */
+  max-height: 60px; /* limita altura, opcional */
+  display: block;
+  margin: 0 auto 1.5rem auto; /* centraliza e dá espaço embaixo */
+  object-fit: contain; /* garante que a imagem se ajuste sem distorcer */
 }
+
 
 /* ===== CONTEÚDO PRINCIPAL ===== */
 .content {
@@ -202,3 +208,38 @@ body {
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
   text-align: justify;
 }
+
+/* Página de investimento */
+.btn-salvar {
+  background-color: #73c0ff; 
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 8px 16px;
+  font-weight: 500;
+  transition: background-color 0.3s ease;
+}
+
+.btn-salvar:hover {
+  background-color: #146c43;
+}
+
+.btn-adicionarlinha {
+  background-color: #1E1E2F; /* Azul Bootstrap (btn-primary) */
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 8px 16px;
+  font-weight: 500;
+  transition: background-color 0.3s ease;
+}
+
+.btn-adicionarlinha:hover {
+  background-color: #0e0e10; /* Tom mais escuro no hover */
+  color:rgb(213, 211, 211);
+}
+
+.total-investimento{
+  margin-bottom: -50px;
+}
+
