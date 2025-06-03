@@ -1,16 +1,38 @@
 document.addEventListener('DOMContentLoaded', function () {
-  // Pega todos os itens da sidebar
   const sidebarItems = document.querySelectorAll('.sidebar-item');
 
-  // Adiciona um evento de clique em cada item da sidebar
-  sidebarItems.forEach(item => {
-    const title = item.querySelector('.sidebar-item-title'); // Supondo que o título tenha a classe 'sidebar-item-title'
+  // Função para salvar no localStorage o índice ativo, ou null
+  function saveActiveIndex(index) {
+    if (index === null) {
+      localStorage.removeItem('sidebarActiveIndex');
+    } else {
+      localStorage.setItem('sidebarActiveIndex', index);
+    }
+  }
 
-    // Verifica se o título existe antes de adicionar o evento de clique
+  // Ao carregar, verifica se tem índice salvo e abre o item
+  const savedIndex = localStorage.getItem('sidebarActiveIndex');
+  if (savedIndex !== null && sidebarItems[savedIndex]) {
+    sidebarItems[savedIndex].classList.add('active');
+  }
+
+  sidebarItems.forEach((item, index) => {
+    const title = item.querySelector('.sidebar-item-title');
+
     if (title) {
-      title.addEventListener('click', function () {
-        // Alterna a classe 'active' no item da sidebar
-        item.classList.toggle('active');
+      title.addEventListener('click', () => {
+        const isActive = item.classList.contains('active');
+
+        if (isActive) {
+          // Se já está ativo, fecha e remove o registro
+          item.classList.remove('active');
+          saveActiveIndex(null);
+        } else {
+          // Fecha todos os outros e abre o atual
+          sidebarItems.forEach(i => i.classList.remove('active'));
+          item.classList.add('active');
+          saveActiveIndex(index);
+        }
       });
     }
   });

@@ -3,51 +3,136 @@
 
 {% block conteudo %}
 <div class="container my-5">
-    <div class="card shadow">
-        <div class="card-body">
-        <h2 class="card-title text-center mb-3">Investimento Inicial</h2>
-        <p class="text-muted text-center">Informe os investimentos necessários para viabilização do empreendimento</p>
+  <div class="card shadow-lg border-0">
+    <div class="card-body">
 
-        <div class="table-responsive mt-4">
-            <table class="table table-bordered align-middle text-center">
-            <thead class="table-light">
+      <!-- Botões estilo tabs pequenos e sofisticados -->
+      <div class="tabs-modern mb-4 d-flex gap-2 justify-content-center">
+        <button id="btn-investimento" class="tab-btn tab-btn-active">Investimento Inicial</button>
+        <button id="btn-ampliacoes" class="tab-btn">Ampliações</button>
+      </div>
+
+      <!-- Conteúdo Investimento -->
+      <div id="conteudo-investimento" class="tab-content active">
+        <h2 class="card-title text-center mb-4">Investimento</h2>
+        <p class="text-muted text-center mb-4">Informe os investimentos necessários para viabilização do empreendimento</p>
+
+        <form method="POST">
+          {% csrf_token %}
+          <div class="table-responsive rounded">
+            <table class="table table-hover table-bordered align-middle text-center shadow-sm bg-white rounded">
+              <thead class="table-primary text-dark">
                 <tr>
-                <th>Data</th>
-                <th>Descrição</th>
-                <th>Qtde</th>
-                <th>Valor Unitário (R$)</th>
-                <th>Depreciação (%)</th>
-                <th>Crédito Imposto (%)</th>
+                  <th>Data</th>
+                  <th>Descrição</th>
+                  <th>Qtde</th>
+                  <th>Valor Unitário (R$)</th>
+                  <th>Depreciação (%)</th>
+                  <th>Crédito Imposto (%)</th>
+                  <th>Ações</th> 
                 </tr>
-            </thead>
-            <tbody>
-                <!-- Linha de entrada -->
+              </thead>
+              <tbody id="tabela-investimentos">
+                {% for item in investimentos %}
                 <tr>
-                <td><input type="date" class="form-control"></td>
-                <td><input type="text" class="form-control" placeholder="Descrição"></td>
-                <td><input type="number" class="form-control" min="0"></td>
-                <td><input type="number" class="form-control" min="0" step="0.01"></td>
-                <td><input type="number" class="form-control" min="0" step="0.01"></td>
-                <td><input type="number" class="form-control" min="0" step="0.01"></td>
+                  <td>{{ item.data }}</td>
+                  <td>{{ item.descricao }}</td>
+                  <td>{{ item.quantidade }}</td>
+                  <td>R$ {{ item.valor_unitario }}</td>
+                  <td>{{ item.depreciacao }}%</td>
+                  <td>{{ item.credito }}%</td>
+                  <td>
+                    <a href="{% url 'excluir_investimento' item.id %}" class="btn btn-outline-danger btn-sm"
+                       onclick="return confirm('Tem certeza que deseja excluir este investimento?');">
+                      <i class="bi bi-trash-fill"></i>
+                    </a>
+                  </td>
                 </tr>
-                <!-- Adicione mais linhas conforme necessário -->
-            </tbody>
+                {% endfor %}
+              </tbody>
+              <tfoot>
+                <tr>
+                  <td colspan="6" class="text-end align-middle">
+                    <strong>Total: {{ total }}</strong>
+                  </td>
+                  <td class="text-center align-middle">
+                    <button type="button" class="btn btn-outline-primary btn-sm" onclick="adicionarLinha()">+</button>
+                  </td>
+                </tr>
+              </tfoot>
             </table>
-        </div>
+          </div>
 
-        <div class="d-flex justify-content-end align-items-center mt-4">
-            <strong class="me-2">Total:</strong>
-            <span class="fs-5 text-success fw-bold">R$ 0,00</span>
-        </div>
+          <div class="botao-salvar">
+            <button type="submit" class="btn-salvar">Salvar</button>
+          </div>
+        </form>
+      </div>
 
-        <div class="d-flex justify-content-end mt-3">
-            <button class="btn btn-primary">Salvar Investimento</button>
-        </div>
-        </div>
+      <!-- Conteúdo Ampliações -->
+      <div id="conteudo-ampliacoes" class="tab-content" style="display:none;">
+        <h2 class="card-title text-center mb-4">Investimento</h2>
+        <p class="text-muted text-center mb-4">Informe eventuais ampliações e melhorias na infra-estrutura</p>
+
+        <form method="POST">
+          {% csrf_token %}
+          <div class="table-responsive rounded">
+            <table class="table table-hover table-bordered align-middle text-center shadow-sm bg-white rounded">
+              <thead class="table-primary text-dark">
+                <tr>
+                  <th>Data</th>
+                  <th>Descrição</th>
+                  <th>Qtde</th>
+                  <th>Valor Unitário (R$)</th>
+                  <th>Depreciação (%)</th>
+                  <th>Crédito Imposto (%)</th>
+                  <th>Ações</th> 
+                </tr>
+              </thead>
+              <tbody id="tabela-investimentos">
+                {% for item in investimentos %}
+                <tr>
+                  <td>{{ item.data }}</td>
+                  <td>{{ item.descricao }}</td>
+                  <td>{{ item.quantidade }}</td>
+                  <td>R$ {{ item.valor_unitario }}</td>
+                  <td>{{ item.depreciacao }}%</td>
+                  <td>{{ item.credito }}%</td>
+                  <td>
+                    <a href="{% url 'excluir_investimento' item.id %}" class="btn btn-outline-danger btn-sm"
+                       onclick="return confirm('Tem certeza que deseja excluir este investimento?');">
+                      <i class="bi bi-trash-fill"></i>
+                    </a>
+                  </td>
+                </tr>
+                {% endfor %}
+              </tbody>
+              <tfoot>
+                <tr>
+                  <td colspan="6" class="text-end align-middle">
+                    <strong>Total: {{ total }}</strong>
+                  </td>
+                  <td class="text-center align-middle">
+                    <button type="button" class="btn btn-outline-primary btn-sm" onclick="adicionarLinha()">+</button>
+                  </td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+
+          <div class="botao-salvar">
+            <button type="submit" class="btn-salvar">Salvar</button>
+          </div>
+        </form>
+      </div>
+
     </div>
+  </div>
 </div>
 {% endblock conteudo %}
 
 {% block extra_js %}
   <script src="{% static 'js/sidebar.js' %}"></script>
+  <script src="{% static 'js/adicionar_linha.js' %}"></script>
+  <script src="{% static 'js/botao-ativacao.js' %}"></script>
 {% endblock extra_js %}

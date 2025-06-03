@@ -15,5 +15,7 @@ urlpatterns = [
     path('modelo/', views.modelo, name='modelo'),
     path('caracteristicas/', views.caracteristicas, name='caracteristicas'),
     path('estagio/', views.estagio, name='estagio'),
-    path('investimento/', views.investimento, name="investimento")
+    path('investimento/', views.investimento, name="investimento"),
+    path('investimento/excluir/<int:investimento_id>/', views.excluir_investimento, name='excluir_investimento'),
+
 ]
