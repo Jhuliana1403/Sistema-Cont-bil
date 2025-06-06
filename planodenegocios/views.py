@@ -77,7 +77,7 @@ def investimento(request):
             )
             investimento.save()
             messages.success(request, "Investimento salvo com sucesso!")
-            return redirect('investimento_ampliacoes')
+            return redirect('investimento')
 
         elif 'form-ampliacao' in request.POST:  # Marca no input hidden
             # pegar dados do formulário de ampliação
