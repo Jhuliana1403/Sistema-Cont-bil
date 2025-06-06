@@ -12,9 +12,9 @@ class Investimento(models.Model):
     def __str__(self):
         return self.descricao
     
-class Investimento_ampliacoes(models.Model):
+class Ampliacoes(models.Model):
     data = models.DateField(null=True, blank=True)
-    descricao = models.CharField(max_length=200)
+    descricao = models.CharField(max_length=200, null=True)
     quantidade = models.PositiveIntegerField()
     valor_unitario = models.DecimalField(max_digits=10, decimal_places=2)
     depreciacao = models.DecimalField(max_digits=5, decimal_places=2)
