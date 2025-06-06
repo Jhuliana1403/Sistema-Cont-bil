@@ -2,7 +2,7 @@
 from django.shortcuts import render, redirect, get_object_or_404
 
 # Importa o modelo Investimento do arquivo models.py
-from .models import Investimento
+from .models import Investimento, Ampliacoes
 
 from django.contrib import messages
 
@@ -38,18 +38,6 @@ def plano(request):
 def distribuicao(request):
     return render(request, 'planodenegocios/distribuicao.html')
 
-# (DUPLICADA) View da análise de setor (já foi declarada acima)
-def analise_setor(request):
-    return render(request, 'planodenegocios/analise_setor.html')
-
-# (DUPLICADA) View de mercado potencial (já foi declarada acima)
-def mercado_potencial(request):
-    return render(request, 'planodenegocios/mercado_potencial.html')
-
-# (DUPLICADA) View da análise da concorrência (já foi declarada acima)
-def analise_concorrencia(request):
-    return render(request, 'planodenegocios/analise_concorrencia.html')
-
 # View que renderiza a página de histórico da empresa ou projeto
 def historico(request):
     return render(request, 'planodenegocios/historico.html')
@@ -68,42 +56,73 @@ def estagio(request):
 
 # View principal para a funcionalidade de investimentos
 def investimento(request):
-    # Verifica se o método da requisição é POST (formulário enviado)
     if request.method == 'POST':
-        # Pega o valor do campo 'descricao' do formulário
-        descricao = request.POST.get('descricao')
+        if 'form-investimento' in request.POST:  # Marca no input hidden
+            # pegar dados do formulário de investimento
+            data = request.POST.get('data')
+            descricao = request.POST.get('descricao')
+            quantidade = request.POST.get('quantidade')
+            valor_unitario = request.POST.get('valor_unitario')
+            depreciacao = request.POST.get('depreciacao')
+            credito = request.POST.get('credito')
 
-        # Captura e converte os valores do formulário, usando 0 como valor padrão
-        quantidade = int(request.POST.get('quantidade') or 0)
-        valor_unitario = float(request.POST.get('valor_unitario') or 0)
-        total = quantidade * valor_unitario  # Calcula o valor total
+            investimento = Investimento(
+                data=data,
+                descricao=descricao,
+                quantidade=int(quantidade),
+                valor_unitario=float(valor_unitario),
+                depreciacao=float(depreciacao),
+                credito=float(credito),
+                total=float(quantidade) * float(valor_unitario)
+            )
+            investimento.save()
+            messages.success(request, "Investimento salvo com sucesso!")
+            return redirect('investimento_ampliacoes')
 
-        # Cria e salva um novo objeto Investimento no banco de dados
-        Investimento.objects.create(
-            data=request.POST.get('data'),
-            descricao=descricao,
-            quantidade=quantidade,
-            valor_unitario=valor_unitario,
-            depreciacao=float(request.POST.get('depreciacao') or 0),
-            credito=float(request.POST.get('credito') or 0),
-            total=total
-        )
+        elif 'form-ampliacao' in request.POST:  # Marca no input hidden
+            # pegar dados do formulário de ampliação
+            data = request.POST.get('data_ampliacao')
+            descricao = request.POST.get('descricao_ampliacao')
+            quantidade = request.POST.get('quantidade_ampliacao')
+            valor_unitario = request.POST.get('valor_unitario_ampliacao')
+            depreciacao = request.POST.get('depreciacao_ampliacao')
+            credito = request.POST.get('credito_ampliacao')
 
-        # Após salvar, redireciona para a mesma página (evita reenvio do formulário ao recarregar)
-        return redirect('investimento')
+            ampliacao = Ampliacoes(
+                data=data,
+                descricao=descricao,
+                quantidade=int(quantidade),
+                valor_unitario=float(valor_unitario),
+                depreciacao=float(depreciacao),
+                credito=float(credito),
+                total=float(quantidade) * float(valor_unitario)
+            )
+            ampliacao.save()
+            messages.success(request, "Ampliação salva com sucesso!")
+            return redirect('investimento')
 
-    # Se não for POST, ou seja, for uma requisição GET, carrega todos os investimentos
+    # GET - listar dados
     investimentos = Investimento.objects.all()
-    total = sum(item.total for item in investimentos)  # Soma total dos investimentos
+    total = sum(item.total for item in investimentos)
 
-    # Renderiza a página de investimentos com os dados
+    ampliacoes = Ampliacoes.objects.all()
+    total_ampliacao = sum(item.total for item in ampliacoes)
+
     return render(request, 'planodenegocios/investimento.html', {
         'investimentos': investimentos,
-        'total': total
+        'total': total,
+        'ampliacoes': ampliacoes,
+        'total_ampliacao': total_ampliacao,
     })
 
 def excluir_investimento(request, investimento_id):
     investimento = get_object_or_404(Investimento, id=investimento_id)  
     investimento.delete()
     messages.success(request, f'O investimento "{investimento.descricao}" foi excluído com sucesso!')
-    return redirect('investimento')  # Certifique-se de que 'investimento' é o nome da URL correta
+    return redirect('investimento')
+
+def excluir_ampliacao(request, ampliacao_id):
+    ampliacao = get_object_or_404(Ampliacoes, id=ampliacao_id)
+    ampliacao.delete()
+    messages.success(request, f'A ampliação "{ampliacao.descricao}" foi excluída com sucesso!')
+    return redirect('investimento')

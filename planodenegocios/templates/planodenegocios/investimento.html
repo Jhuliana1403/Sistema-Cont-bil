@@ -6,21 +6,22 @@
   <div class="card shadow-lg border-0">
     <div class="card-body">
 
-      <!-- Botões estilo tabs pequenos e sofisticados -->
+      <!-- Tabs -->
       <div class="tabs-modern mb-4 d-flex gap-2 justify-content-center">
         <button id="btn-investimento" class="tab-btn tab-btn-active">Investimento Inicial</button>
         <button id="btn-ampliacoes" class="tab-btn">Ampliações</button>
       </div>
 
-      <!-- Conteúdo Investimento -->
+      <!-- Investimento Inicial -->
       <div id="conteudo-investimento" class="tab-content active">
-        <h2 class="card-title text-center mb-4">Investimento</h2>
+        <h2 class="card-title text-center mb-4">Investimento Inicial</h2>
         <p class="text-muted text-center mb-4">Informe os investimentos necessários para viabilização do empreendimento</p>
 
-        <form method="POST">
+        <form method="POST" id="form-investimento">
           {% csrf_token %}
+          <input type="hidden" name="form-investimento" value="1">
           <div class="table-responsive rounded">
-            <table class="table table-hover table-bordered align-middle text-center shadow-sm bg-white rounded">
+            <table class="table table-hover table-bordered align-middle text-center shadow-sm bg-white rounded" id="tabela-investimentos">
               <thead class="table-primary text-dark">
                 <tr>
                   <th>Data</th>
@@ -32,7 +33,7 @@
                   <th>Ações</th> 
                 </tr>
               </thead>
-              <tbody id="tabela-investimentos">
+              <tbody>
                 {% for item in investimentos %}
                 <tr>
                   <td>{{ item.data }}</td>
@@ -56,28 +57,28 @@
                     <strong>Total: {{ total }}</strong>
                   </td>
                   <td class="text-center align-middle">
-                    <button type="button" class="btn btn-outline-primary btn-sm" onclick="adicionarLinha()">+</button>
+                    <button type="button" class="btn btn-outline-primary btn-sm" onclick="adicionarInvestimento()">+</button>
                   </td>
                 </tr>
               </tfoot>
             </table>
           </div>
-
           <div class="botao-salvar">
             <button type="submit" class="btn-salvar">Salvar</button>
           </div>
         </form>
       </div>
 
-      <!-- Conteúdo Ampliações -->
-      <div id="conteudo-ampliacoes" class="tab-content" style="display:none;">
-        <h2 class="card-title text-center mb-4">Investimento</h2>
+      <!-- Ampliações -->
+      <div id="conteudo-ampliacao" class="tab-content d-none" role="tabpanel" aria-labelledby="btn-ampliacao">
+        <h2 class="card-title text-center mb-4">Ampliações</h2>
         <p class="text-muted text-center mb-4">Informe eventuais ampliações e melhorias na infra-estrutura</p>
 
-        <form method="POST">
+        <form method="POST" id="form-ampliacao">
           {% csrf_token %}
+          <input type="hidden" name="form-ampliacao" value="1">
           <div class="table-responsive rounded">
-            <table class="table table-hover table-bordered align-middle text-center shadow-sm bg-white rounded">
+            <table class="table table-hover table-bordered align-middle text-center shadow-sm bg-white rounded" id="tabela-ampliacao">
               <thead class="table-primary text-dark">
                 <tr>
                   <th>Data</th>
@@ -89,18 +90,18 @@
                   <th>Ações</th> 
                 </tr>
               </thead>
-              <tbody id="tabela-investimentos">
-                {% for item in investimentos %}
+              <tbody>
+                {% for item in ampliacoes %}
                 <tr>
                   <td>{{ item.data }}</td>
                   <td>{{ item.descricao }}</td>
                   <td>{{ item.quantidade }}</td>
-                  <td>R$ {{ item.valor_unitario }}</td>
+                  <td>R$ {{ item.valor_unitario|floatformat:2 }}</td>
                   <td>{{ item.depreciacao }}%</td>
                   <td>{{ item.credito }}%</td>
                   <td>
-                    <a href="{% url 'excluir_investimento' item.id %}" class="btn btn-outline-danger btn-sm"
-                       onclick="return confirm('Tem certeza que deseja excluir este investimento?');">
+                    <a href="{% url 'excluir_ampliacao' item.id %}" class="btn btn-outline-danger btn-sm"
+                      onclick="return confirm('Tem certeza que deseja excluir esta ampliação?');">
                       <i class="bi bi-trash-fill"></i>
                     </a>
                   </td>
@@ -110,22 +111,20 @@
               <tfoot>
                 <tr>
                   <td colspan="6" class="text-end align-middle">
-                    <strong>Total: {{ total }}</strong>
+                    <strong>Total: R$ {{ total_ampliacao|floatformat:2 }}</strong>
                   </td>
                   <td class="text-center align-middle">
-                    <button type="button" class="btn btn-outline-primary btn-sm" onclick="adicionarLinha()">+</button>
+                    <button type="button" class="btn btn-outline-primary btn-sm" onclick="adicionarLinhaAmpliacao()">+</button>
                   </td>
                 </tr>
               </tfoot>
             </table>
           </div>
-
-          <div class="botao-salvar">
-            <button type="submit" class="btn-salvar">Salvar</button>
+          <div class="botao-salvar text-center mt-3">
+            <button type="submit" class="btn btn-success">Salvar</button>
           </div>
         </form>
       </div>
-
     </div>
   </div>
 </div>
