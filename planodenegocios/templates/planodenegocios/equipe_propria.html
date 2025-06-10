@@ -1,0 +1,115 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block conteudo %}
+<div class="container my-5">
+  <div class="card shadow-lg border-0">
+    <div class="card-body">
+
+      <!-- Tabs -->
+      <div class="tabs-modern mb-4 d-flex gap-2 justify-content-center">
+        <button id="btn-equipe" class="tab-btn tab-btn-active" onclick="mostrarAba('conteudo-equipe', this)">Equipe</button>
+        <button id="btn-valores" class="tab-btn" onclick="mostrarAba('conteudo-valores', this)">Valores</button>
+      </div>
+
+      <!-- Aba Equipe -->
+      <div id="conteudo-equipe" class="tab-content active">
+        <h2 class="card-title text-center mb-4">Equipe Própria</h2>
+        <p class="text-muted text-center mb-4">Informe os cargos, quantidade e salários da equipe.</p>
+
+        <form method="POST" id="form-equipe">
+          {% csrf_token %}
+          <input type="hidden" name="form-equipe" value="1">
+          <div class="table-responsive rounded">
+            <table class="table table-hover table-bordered align-middle text-center shadow-sm bg-white rounded" id="tabela-equipe">
+              <thead class="table-primary text-dark">
+                <tr>
+                  <th>Cargo</th>
+                  <th>Qtde</th>
+                  <th>Salário Inicial (R$)</th>
+                  <th>Valor Inicial (R$)</th>
+                  <th>Ações</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for f in funcionarios %}
+                <tr>
+                  <td>{{ f.cargo }}</td>
+                  <td>{{ f.quantidade }}</td>
+                  <td>R$ {{ f.salario_inicial|floatformat:2 }}</td>
+                  <td>R$ {{ f.valor_inicial|floatformat:2 }}</td>
+                  <td>
+                    <a href="#" class="btn btn-outline-danger btn-sm" onclick="return confirm('Deseja excluir este cargo?');">
+                      <i class="bi bi-trash-fill"></i>
+                    </a>
+                  </td>
+                </tr>
+                {% endfor %}
+              </tbody>
+              <tfoot>
+                <tr>
+                  <td colspan="4" class="text-end align-middle">
+                    <strong>Total de Colaboradores: {{ total_colaboradores }}</strong><br>
+                    <strong>Remuneração Total (Mês 1): R$ {{ total_salario|floatformat:2 }}</strong>
+                  </td>
+                  <td class="text-center align-middle">
+                    <button type="button" class="btn btn-outline-primary btn-sm" onclick="adicionarLinhaEquipe()">+</button>
+                  </td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+          <div class="botao-salvar">
+            <button type="submit" class="btn-salvar">Salvar</button>
+          </div>
+        </form>
+      </div>
+
+      <!-- Aba Valores -->
+      <div id="conteudo-valores" class="tab-content d-none" role="tabpanel" aria-labelledby="btn-valores">
+        <h2 class="card-title text-center mb-4">Valores Mensais</h2>
+        <p class="text-muted text-center mb-4">Projeção de salários para os 12 primeiros meses (valores constantes).</p>
+
+        <div class="table-responsive rounded">
+          <table class="table table-hover table-bordered align-middle text-center shadow-sm bg-white rounded">
+            <thead class="table-primary text-dark">
+              <tr>
+                <th>Cargo</th>
+                {% for mes in "123456789101112"|make_list %}
+                <th>M{{ mes }}</th>
+                {% endfor %}
+              </tr>
+            </thead>
+            <tbody>
+              {% for f in funcionarios %}
+              <tr>
+                <td>{{ f.cargo }}</td>
+                {% for mes in "123456789101112"|make_list %}
+                <td>R$ {{ f.salario_inicial|floatformat:2 }}</td>
+                {% endfor %}
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+{% endblock conteudo %}
+
+{% block extra_js %}
+<script src="{% static 'js/sidebar.js' %}"></script>
+<script src="{% static 'js/adicionar_linha.js' %}"></script>
+<script src="{% static 'js/botao-ativacao.js' %}"></script>
+<script>
+  function mostrarAba(idAba, btn) {
+    document.querySelectorAll('.tab-content').forEach(el => el.classList.add('d-none'));
+    document.getElementById(idAba).classList.remove('d-none');
+
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('tab-btn-active'));
+    btn.classList.add('tab-btn-active');
+  }
+</script>
+{% endblock extra_js %}

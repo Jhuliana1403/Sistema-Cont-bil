@@ -126,3 +126,33 @@ def excluir_ampliacao(request, ampliacao_id):
     ampliacao.delete()
     messages.success(request, f'A ampliação "{ampliacao.descricao}" foi excluída com sucesso!')
     return redirect('investimento')
+
+# View para Equipe própia
+from .models import Funcionario
+from django.shortcuts import render, redirect
+from django.contrib import messages
+
+def equipe_propria(request):
+    if request.method == 'POST':
+        cargo = request.POST.get('cargo')
+        quantidade = request.POST.get('quantidade')
+        salario = request.POST.get('salario')
+
+        funcionario = Funcionario(
+            cargo=cargo,
+            quantidade=int(quantidade),
+            salario_inicial=float(salario),
+        )
+        funcionario.save()
+        messages.success(request, "Funcionário adicionado com sucesso!")
+        return redirect('equipe_propria')
+
+    funcionarios = Funcionario.objects.all()
+    total_salario = sum(f.valor_inicial for f in funcionarios)
+    total_colaboradores = sum(f.quantidade for f in funcionarios)
+
+    return render(request, 'planodenegocios/equipe_propria.html', {
+        'funcionarios': funcionarios,
+        'total_salario': total_salario,
+        'total_colaboradores': total_colaboradores,
+    })
