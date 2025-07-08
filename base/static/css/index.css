@@ -6,12 +6,16 @@
 
 body {
   display: flex;
-  height: 100vh;
+  height: 100%;
   overflow: none;
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   background-color: #f1f3f5;
   color: #212529;
   user-select: none;
+}
+
+a{
+  text-decoration: none;
 }
 
 /* ===== SIDEBAR ===== */
@@ -26,6 +30,7 @@ body {
   flex-direction: column;
   justify-content: flex-start;
   scrollbar-gutter: stable;
+  min-height: 100vh; 
 }
 
 /* Cabeçalho da sidebar */

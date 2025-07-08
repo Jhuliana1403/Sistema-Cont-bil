@@ -26,4 +26,9 @@ urlpatterns = [
     path('investimento/', views.investimento, name='investimento'),
     path('investimento/excluir/<int:investimento_id>/', views.excluir_investimento, name='excluir_investimento'),
     path('ampliacoes/excluir/<int:ampliacao_id>/', views.excluir_ampliacao, name='excluir_ampliacao'),
+
+    #Produtos e Serviços
+    path('cadastrar_produtoservicos/', views.cadastrar_produto, name='cadastrar_produto'),
+    path('produtoservicos/', views.produto, name='produto'),
+    path('excluir_produtoservicos/<int:produto_id>', views.excluir_produto, name='excluir_produto'),
 ]

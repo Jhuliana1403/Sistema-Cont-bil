@@ -1,0 +1,109 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block conteudo %}
+<div class="container my-5">
+  <div class="card shadow-lg border-0">
+    <div class="card-body">
+
+      <!-- Mensagens Django -->
+      {% if messages %}
+        {% for message in messages %}
+          <div class="alert alert-success alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+          </div>
+        {% endfor %}
+      {% endif %}
+
+      <!-- Tabs -->
+      <div class="tabs-modern mb-4 d-flex gap-2 justify-content-center">
+        <button id="btn-produto1" class="tab-btn tab-btn-active">Produto 1</button>
+      </div>
+
+      <!-- Investimento Inicial -->
+      <div id="conteudo-produto" class="tab-content active">
+        <h2 class="card-title text-center mb-4">Produtos, Serviços e Insumos</h2>
+        <p class="text-muted text-center mb-4">Modelo de Receitas do Produtos/Serviços</p>
+        <strong class="text-muted text-center mb-4">Características do produto/serviço, preço de comercialização e custos envolvidos</strong>
+
+        <form method="POST" id="form-investimento">
+          {% csrf_token %}
+          <input type="hidden" name="form-investimento" value="1">
+          <div class="table-responsive rounded">
+            <table class="table table-hover table-bordered align-middle text-center shadow-sm bg-white rounded" id="tabela-investimentos">
+              <thead class="table-primary text-dark">
+                <tr>
+                  <th>Tipo</th>
+                  <th>Nome</th>
+                  <th>Unidade de venda</th>
+                  <th>Margem de Lucro Bruta (%)</th>
+                  <th>Custo por Unidade de Venda</th>
+                  <th>Preço (de cada unidade de venda)</th>
+                  <th>Ações</th> 
+                </tr>
+              </thead>
+              <tbody>
+                {% if produtos %}
+                  {% for item in produtos %}
+                  <tr>
+                    <td>{{ item.tipo }}</td>
+                    <td>{{ item.nome }}</td>
+                    <td>{{ item.unidade_venda }}</td>
+                    <td>
+                      {% if item.margem_lucro %}
+                        {{ item.margem_lucro|floatformat:2 }}%
+                      {% else %}
+                        Sem dados
+                      {% endif %}
+                    </td>
+                    <td>
+                      {% if item.custo_unitario %}
+                        R$ {{ item.custo_unitario|floatformat:2 }}
+                      {% else %}
+                        Sem dados
+                      {% endif %}
+                    </td>
+                    <td>R$ {{ item.preco_venda|floatformat:2 }}</td>
+                    <td>
+                      <a href="{% url 'excluir_produto' item.id %}" class="btn btn-outline-danger btn-sm"
+                         onclick="return confirm('Tem certeza que deseja excluir este item?');">
+                         <i class="bi bi-trash-fill"></i>
+                      </a>
+                    </td>
+                  </tr>
+                  {% endfor %}
+                {% else %}
+                  <tr>
+                    <td colspan="7" class="text-center fst-italic text-muted">Sem dados</td>
+                  </tr>
+                {% endif %}
+              </tbody>
+              <tfoot>
+                <tr>
+                  <td colspan="6" class="text-end align-middle">
+                    <strong>Total: {{ total }}</strong>
+                  </td>
+                  <td class="text-center align-middle">
+                    <button type="button" class="btn btn-outline-primary btn-sm"><a href="{% url 'cadastrar_produto' %}">+</a></button>
+                  </td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+          <div class="botao-salvar">
+            <button type="submit" class="btn-salvar">Salvar</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock conteudo %}
+
+{% block extra_js %}
+  <script src="{% static 'js/sidebar.js' %}"></script>
+  <script src="{% static 'js/adicionar_linha.js' %}"></script>
+  <script src="{% static 'js/botao-ativacao.js' %}"></script>
+  <script src="{% static 'js/calculo-markup.js' %}"></script>
+{% endblock extra_js %}
