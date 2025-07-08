@@ -30,4 +30,8 @@ urlpatterns = [
     # Equipe própia
     path('equipe-propria/', views.equipe_propria, name='equipe_propria'),
 
+    #Produtos e Serviços
+    path('cadastrar_produtoservicos/', views.cadastrar_produto, name='cadastrar_produto'),
+    path('produtoservicos/', views.produto, name='produto'),
+    path('excluir_produtoservicos/<int:produto_id>', views.excluir_produto, name='excluir_produto'),
 ]

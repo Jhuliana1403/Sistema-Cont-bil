@@ -2,7 +2,7 @@
 from django.shortcuts import render, redirect, get_object_or_404
 
 # Importa o modelo Investimento do arquivo models.py
-from .models import Investimento, Ampliacoes
+from .models import Investimento, Ampliacoes, ProdutoServico, CustoProducao
 
 from django.contrib import messages
 
@@ -263,3 +263,73 @@ def equipe_propria(request):
         'totais_transporte': totais_transporte,
         'totais_geral': totais_geral,
     })
+
+#Produtos e Serviços
+def produto(request):
+    produtos = ProdutoServico.objects.all()  # Corrigido o nome da variável e da classe
+
+    return render(request, "planodenegocios/produto.html", {
+        'produtos': produtos  # Também corrigido o nome passado para o template
+    })
+
+def cadastrar_produto(request):
+    markup = None
+
+    def to_float(valor):
+        try:
+            return float(valor)
+        except (TypeError, ValueError):
+            return 0.0
+
+    if request.method == "POST":
+        tipo = request.POST.get("tipo_de_produto")
+        nome = request.POST.get("nome_produto")
+        unidade = request.POST.get("unidade_venda")
+
+        preco_venda_inserido = to_float(request.POST.get("preco_venda"))
+        preco_venda_calculado = to_float(request.POST.get("precoVenda"))
+        preco_compra = to_float(request.POST.get("precoCompra"))
+        preco_varia = bool(request.POST.get("preco_varia"))
+
+        # Decidir qual preço_venda usar para salvar (exemplo: priorizar o inserido manualmente)
+        preco_venda_final = preco_venda_inserido if preco_venda_inserido > 0 else preco_venda_calculado
+
+        if preco_compra > 0:
+            markup = ((preco_venda_final - preco_compra) / preco_compra) * 100
+
+        frete = request.POST.get("novo_frete") or "0"
+        embalagem = request.POST.get("nova_embalagem") or ""
+        nova_materia_prima = request.POST.get("nova_materia_prima") or ""
+
+        try:
+            produto = ProdutoServico.objects.create(
+                tipo=tipo,
+                nome=nome,
+                unidade_venda=unidade,
+                margem_lucro=markup or 0,
+                preco_venda=preco_venda_final,
+                preco_varia=preco_varia
+            )
+
+            if frete != "0" or embalagem or nova_materia_prima:
+                CustoProducao.objects.create(
+                    produto=produto.nome,
+                    frete=float(frete),
+                    embalagem=embalagem
+                )
+
+            messages.success(request, "Produto, serviço ou insumo salvo com sucesso!")
+            return redirect("produto")
+
+        except Exception as e:
+            messages.error(request, f"Erro ao salvar: {str(e)}")
+
+    return render(request, "planodenegocios/cadastrar_produto.html", {'markup': markup})
+
+
+def excluir_produto(request, produto_id):
+    produto = get_object_or_404(ProdutoServico, id=produto_id)
+    produto.delete()
+    messages.success(request, f'O produto/serviço "{produto.nome}" foi excluída com sucesso!')
+    return redirect('produto')
+
