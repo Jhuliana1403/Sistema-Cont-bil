@@ -31,6 +31,7 @@ class Funcionario(models.Model):
     quantidade = models.PositiveIntegerField()
     salario_inicial = models.DecimalField(max_digits=10, decimal_places=2)
 
+    @property
     def valor_inicial(self):
         return self.quantidade * self.salario_inicial
 
@@ -55,3 +56,13 @@ class Beneficio(models.Model):
     tipo = models.CharField(max_length=20, choices=[('alimentacao', 'Alimentação'), ('transporte', 'Transporte')])
     mes = models.PositiveSmallIntegerField()
     valor = models.DecimalField(max_digits=10, decimal_places=2)
+
+class EncargoGlobal(models.Model):  # era EncargosOutrosCustos
+    percentual = models.DecimalField(max_digits=5, decimal_places=2, default=0.0)
+
+class DespesaMensal(models.Model):  # era CustoMensal
+    mes = models.PositiveSmallIntegerField()  # 1 a 60
+    tipo = models.CharField(max_length=20, choices=[('alimentacao', 'Alimentação'), ('transporte', 'Transporte')])
+    valor = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+
+

@@ -10,6 +10,7 @@
       <div class="tabs-modern mb-4 d-flex gap-2 justify-content-center">
         <button id="btn-equipe" class="tab-btn tab-btn-active" onclick="mostrarAba('conteudo-equipe', this)">Equipe</button>
         <button id="btn-valores" class="tab-btn" onclick="mostrarAba('conteudo-valores', this)">Valores</button>
+        <button id="btn-encargos" class="tab-btn" onclick="mostrarAba('conteudo-encargos', this)">Encargos e Outras Despesas</button>
       </div>
 
       <!-- Aba Equipe -->
@@ -68,25 +69,46 @@
       <!-- Aba Valores -->
       <div id="conteudo-valores" class="tab-content d-none" role="tabpanel" aria-labelledby="btn-valores">
         <h2 class="card-title text-center mb-4">Valores Mensais</h2>
-        <p class="text-muted text-center mb-4">Projeção de salários para os 12 primeiros meses (valores constantes).</p>
+        <p class="text-muted text-center mb-4">
+          Projeção de salários ao longo dos 60 meses.
+        </p>
+
+        <div class="text-center mb-3">
+          <label class="me-3">
+            <input type="radio" name="tipo_valor" value="constante" checked> CONSTANTES
+          </label>
+          {% comment %} <label>
+            <input type="radio" name="tipo_valor" value="variavel"> VARIÁVEIS
+          </label> {% endcomment %}
+        </div>
 
         <div class="table-responsive rounded">
           <table class="table table-hover table-bordered align-middle text-center shadow-sm bg-white rounded">
             <thead class="table-primary text-dark">
               <tr>
                 <th>Cargo</th>
-                {% for mes in "123456789101112"|make_list %}
+                {% for mes in meses %}
                 <th>M{{ mes }}</th>
                 {% endfor %}
+                <th>Total Ano I</th>
+                <th>Total Ano II</th>
+                <th>Total Ano III</th>
+                <th>Total Ano IV</th>
+                <th>Total Ano V</th>
               </tr>
             </thead>
             <tbody>
-              {% for f in funcionarios %}
+              {% for df in dados_funcionarios %}
               <tr>
-                <td>{{ f.cargo }}</td>
-                {% for mes in "123456789101112"|make_list %}
-                <td>R$ {{ f.salario_inicial|floatformat:2 }}</td>
+                <td>{{ df.funcionario.cargo }}</td>
+                {% for mes in meses %}
+                <td>R$ {{ df.funcionario.salario_inicial|floatformat:2 }}</td>
                 {% endfor %}
+                <td>R$ {{ df.total_ano_i|floatformat:2 }}</td>
+                <td>R$ {{ df.total_ano_ii|floatformat:2 }}</td>
+                <td>R$ {{ df.total_ano_iii|floatformat:2 }}</td>
+                <td>R$ {{ df.total_ano_iv|floatformat:2 }}</td>
+                <td>R$ {{ df.total_ano_v|floatformat:2 }}</td>
               </tr>
               {% endfor %}
             </tbody>
@@ -94,22 +116,114 @@
         </div>
       </div>
 
+      <!-- Aba Encargos -->
+      <div id="conteudo-encargos" class="tab-content d-none">
+        <h2 class="card-title text-center mb-4">Encargos e Outras Despesas com Pessoal</h2>
+
+        <form method="POST" id="form-encargos">
+          {% csrf_token %}
+            <input type="hidden" name="form-encargos" value="1">
+          
+          <!-- Percentual médio de encargos -->
+          <div class="mb-3 text-center">
+            <label class="form-label fw-bold">Percentual médio de encargos sociais:</label>
+            <input type="number" step="0.01" min="0" max="100" class="form-control w-auto d-inline" name="percentual_encargos" value="{{ percentual_encargos }}"> %
+          </div>
+
+          <!-- Tabela de gastos -->
+          <div class="table-responsive rounded">
+            <table class="table table-hover table-bordered align-middle text-center shadow-sm bg-white rounded">
+              <thead class="table-primary text-dark">
+                <tr>
+                  <th>Custos</th>
+                  {% for mes in meses %}
+                  <th>M{{ mes }}</th>
+                  {% endfor %}
+                  <th>Total Ano I</th>
+                  <th>Total Ano II</th>
+                  <th>Total Ano III</th>
+                  <th>Total Ano IV</th>
+                  <th>Total Ano V</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>Salários</td>
+                  {% for valor in salarios_mes %}
+                  <td>R$ {{ valor|floatformat:2 }}</td>
+                  {% endfor %}
+                  {% for total in totais_salario %}
+                  <td>R$ {{ total|floatformat:2 }}</td>
+                  {% endfor %}
+                </tr>
+                <tr>
+                  <td>Encargos sociais ({{ percentual_encargos }}%)</td>
+                  {% for valor in encargos_mes %}
+                  <td>R$ {{ valor|floatformat:2 }}</td>
+                  {% endfor %}
+                  {% for total in totais_encargos %}
+                  <td>R$ {{ total|floatformat:2 }}</td>
+                  {% endfor %}
+                </tr>
+                <tr class="fw-bold">
+                  <td>Subtotal</td>
+                  {% for valor in subtotal_mes %}
+                  <td>R$ {{ valor|floatformat:2 }}</td>
+                  {% endfor %}
+                  {% for total in totais_subtotal %}
+                  <td>R$ {{ total|floatformat:2 }}</td>
+                  {% endfor %}
+                </tr>
+                <tr>
+                  <td>Despesas com alimentação</td>
+                  {% for valor in alimentacao_mes %}
+                  <td>R$ {{ valor|floatformat:2 }}</td>
+                  {% endfor %}
+                  {% for total in totais_alimentacao %}
+                  <td>R$ {{ total|floatformat:2 }}</td>
+                  {% endfor %}
+                </tr>
+                <tr>
+                  <td>Despesas com transporte</td>
+                  {% for valor in transporte_mes %}
+                  <td>R$ {{ valor|floatformat:2 }}</td>
+                  {% endfor %}
+                  {% for total in totais_transporte %}
+                  <td>R$ {{ total|floatformat:2 }}</td>
+                  {% endfor %}
+                </tr>
+                <tr class="fw-bold bg-light">
+                  <td>TOTAL</td>
+                  {% for valor in total_geral_mes %}
+                  <td>R$ {{ valor|floatformat:2 }}</td>
+                  {% endfor %}
+                  {% for total in totais_geral %}
+                  <td>R$ {{ total|floatformat:2 }}</td>
+                  {% endfor %}
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="botao-salvar text-end mt-3">
+            <button type="submit" class="btn-salvar">Salvar Encargos</button>
+          </div>
+        </form>
+      </div>
     </div>
   </div>
 </div>
 {% endblock conteudo %}
 
 {% block extra_js %}
-<script src="{% static 'js/sidebar.js' %}"></script>
-<script src="{% static 'js/adicionar_linha.js' %}"></script>
-<script src="{% static 'js/botao-ativacao.js' %}"></script>
-<script>
-  function mostrarAba(idAba, btn) {
-    document.querySelectorAll('.tab-content').forEach(el => el.classList.add('d-none'));
-    document.getElementById(idAba).classList.remove('d-none');
+  <script src="{% static 'js/sidebar.js' %}"></script>
+  <script src="{% static 'js/equipe_propria.js' %}"></script>
+  <script>
+    function mostrarAba(idAba, btn) {
+      document.querySelectorAll('.tab-content').forEach(el => el.classList.add('d-none'));
+      document.getElementById(idAba).classList.remove('d-none');
 
-    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('tab-btn-active'));
-    btn.classList.add('tab-btn-active');
-  }
-</script>
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('tab-btn-active'));
+      btn.classList.add('tab-btn-active');
+    }
+  </script>
 {% endblock extra_js %}
