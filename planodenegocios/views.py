@@ -24,3 +24,4 @@ def plano(request):
 def distribuicao(request):
     return render(request, 'planodenegocios/distribuicao.html')
 
+ 
