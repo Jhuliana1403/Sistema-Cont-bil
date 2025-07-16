@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block conteudo %}
+<!-- Conteúdo -->
+<div class="content d-flex flex-column">
+  <h3>Descrição Legal e Estrutura Societária</h3>
+  <div class="editor-area" contenteditable="true" placeholder="Digite aqui a descrição legal e estrutura societária..."></div>
+
+    <div class="footer-notes mt-auto">
+        <strong>Suporte á edição - Orientação</strong> <br>
+        O tipo de negócio, serviço ou produto proposto necessita de alguma licença especial, algum controle governamental ou ambiental?
+        Existe alguma legislação específica voltada para o negócio da empresa?
+        Qual é o regime jurídico escolhido pelos sócios? Qual é a razão desta escolha?
+        Se algum sócio desejar sair da empresa, está definida a regra de saída? Como será calculador o valor da empresa? Há preferência para a compra de parte da empresa?
+    </div>
+</div>
+{% endblock conteudo %}
+
+{% block extra_js %}
+  <script src="{% static 'js/sidebar.js' %}"></script>
+{% endblock extra_js %}

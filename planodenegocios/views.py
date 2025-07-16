@@ -54,6 +54,41 @@ def caracteristicas(request):
 def estagio(request):
     return render(request, 'planodenegocios/estagio.html')
 
+#View do complemento da administração e  gestão
+def producao(request):
+    return render(request, 'planodenegocios/producao.html')
+
+def descricao(request):
+    return render(request, 'planodenegocios/descricao.html')
+
+def equipe(request):
+    return render(request, 'planodenegocios/equipe.html')
+
+def terceirizacao(request):
+    return render(request, 'planodenegocios/terceirizacao.html')
+
+def alianca(request):
+    return render(request, 'planodenegocios/alianca.html')
+
+def pesquisa(request):
+    return render(request, 'planodenegocios/pesquisa.html')
+
+def qualidade(request):
+    return render(request, 'planodenegocios/qualidade.html')
+
+#Plano de Implantação
+def risco(request):
+    return render(request, 'planodenegocios/analiseriscos.html')
+
+def fatores(request):
+    return render(request, 'planodenegocios/fatores.html')
+
+def cronograma(request):
+    return render(request, 'planodenegocios/cronograma.html')
+
+def alternativa(request):
+    return render(request, 'planodenegocios/alternativa.html')
+
 # View principal para a funcionalidade de investimentos
 def investimento(request):
     if request.method == 'POST':
