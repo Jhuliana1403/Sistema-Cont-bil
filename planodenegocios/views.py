@@ -1,8 +1,9 @@
 # Importa as funções necessárias do Django para renderizar templates e redirecionar requisições
 from django.shortcuts import render, redirect, get_object_or_404
 
+from decimal import Decimal
 # Importa o modelo Investimento do arquivo models.py
-from .models import Investimento, Ampliacoes, ProdutoServico, CustoProducao
+from .models import Investimento, Ampliacoes, ProdutoServico, CustoProducao, Funcionario, EncargoGlobal, DespesaMensal
 
 from django.contrib import messages
 
@@ -162,6 +163,138 @@ def excluir_ampliacao(request, ampliacao_id):
     messages.success(request, f'A ampliação "{ampliacao.descricao}" foi excluída com sucesso!')
     return redirect('investimento')
 
+def equipe_propria(request):
+    if request.method == 'POST':
+        # === Verifica se é o formulário de equipe ===
+        if 'form-equipe' in request.POST:
+            cargo = request.POST.get('cargo', '').strip()
+            quantidade = request.POST.get('quantidade')
+            salario = request.POST.get('salario_inicial')
+
+            if not cargo or not quantidade or not salario:
+                messages.error(request, "Todos os campos são obrigatórios.")
+                return redirect('equipe_propria')
+
+            try:
+                quantidade = int(quantidade)
+                salario = Decimal(salario)
+            except (ValueError, TypeError):
+                messages.error(request, "Quantidade e salário devem ser números válidos.")
+                return redirect('equipe_propria')
+
+            funcionario = Funcionario(
+                cargo=cargo,
+                quantidade=quantidade,
+                salario_inicial=salario,
+            )
+            funcionario.save()
+            messages.success(request, "Funcionário adicionado com sucesso!")
+            return redirect('equipe_propria')
+
+        # === Verifica se é o formulário de encargos ===
+        elif 'form-encargos' in request.POST:
+            # Percentual médio
+            percentual = request.POST.get('percentual_encargos', '0').replace(',', '.')
+            try:
+                percentual = float(percentual)
+                encargo, _ = EncargoGlobal.objects.get_or_create(id=1)
+                encargo.percentual = percentual
+                encargo.save()
+                messages.success(request, "Encargos atualizados com sucesso!")
+            except:
+                messages.error(request, "Percentual inválido.")
+
+            return redirect('equipe_propria')
+
+    # === Parte comum (GET) ===
+    funcionarios = Funcionario.objects.all()
+    dados_funcionarios = []
+    total_salario_mensal = Decimal('0')
+
+    for f in funcionarios:
+        total_mensal = f.salario_inicial * f.quantidade
+        total_salario_mensal += total_mensal
+
+        dados_funcionarios.append({
+            'funcionario': f,
+            'total_ano_i': total_mensal * 12,
+            'total_ano_ii': total_mensal * 12,
+            'total_ano_iii': total_mensal * 12,
+            'total_ano_iv': total_mensal * 12,
+            'total_ano_v': total_mensal * 12,
+        })
+
+    # === Encargos sociais médios ===
+    encargo = EncargoGlobal.objects.first()
+    percentual_encargos = encargo.percentual if encargo else Decimal('0')
+    percentual_encargos_decimal = Decimal(percentual_encargos) / Decimal('100')
+    total_encargos_ano = total_salario_mensal * percentual_encargos_decimal * Decimal('12')
+
+    # === Despesas com alimentação e transporte ===
+    despesas_alimentacao = DespesaMensal.objects.filter(tipo='alimentacao')
+    despesas_transporte = DespesaMensal.objects.filter(tipo='transporte')
+
+    # --- Mês a mês (1 a 12) ---
+    salarios_mes = []
+    encargos_mes = []
+    subtotal_mes = []
+    alimentacao_mes = []
+    transporte_mes = []
+    total_geral_mes = []
+
+    for mes in range(1, 13):
+        salario_mes = sum(f.salario_inicial * f.quantidade for f in funcionarios)
+        encargo_mes = salario_mes * percentual_encargos_decimal
+        alimentacao = sum(d.valor for d in despesas_alimentacao if d.mes == mes)
+        transporte = sum(d.valor for d in despesas_transporte if d.mes == mes)
+
+        subtotal = salario_mes + encargo_mes
+        total = subtotal + alimentacao + transporte
+
+        salarios_mes.append(salario_mes)
+        encargos_mes.append(encargo_mes)
+        subtotal_mes.append(subtotal)
+        alimentacao_mes.append(alimentacao)
+        transporte_mes.append(transporte)
+        total_geral_mes.append(total)
+
+    # --- Totais por ano (12 em 12) ---
+    def agrupar_em_anos(lista):
+        return [sum(lista[i*12:(i+1)*12]) for i in range(5)]
+
+    totais_salario = agrupar_em_anos(salarios_mes)
+    totais_encargos = agrupar_em_anos(encargos_mes)
+    totais_subtotal = agrupar_em_anos(subtotal_mes)
+    totais_alimentacao = agrupar_em_anos(alimentacao_mes)
+    totais_transporte = agrupar_em_anos(transporte_mes)
+    totais_geral = agrupar_em_anos(total_geral_mes)
+
+    # --- Soma de colaboradores ---
+    total_colaboradores = sum(f.quantidade for f in funcionarios)
+
+    # === Render ===
+    return render(request, 'planodenegocios/equipe_propria.html', {
+        'funcionarios': funcionarios,
+        'dados_funcionarios': dados_funcionarios,
+        'total_salario': total_salario_mensal,
+        'total_colaboradores': total_colaboradores,
+        'meses': range(1, 13),
+        'percentual_encargos': percentual_encargos,
+        'total_encargos_ano': total_encargos_ano,
+        'salarios_mes': salarios_mes,
+        'encargos_mes': encargos_mes,
+        'subtotal_mes': subtotal_mes,
+        'alimentacao_mes': alimentacao_mes,
+        'transporte_mes': transporte_mes,
+        'total_geral_mes': total_geral_mes,
+        'totais_salario': totais_salario,
+        'totais_encargos': totais_encargos,
+        'totais_subtotal': totais_subtotal,
+        'totais_alimentacao': totais_alimentacao,
+        'totais_transporte': totais_transporte,
+        'totais_geral': totais_geral,
+    })
+
 #Produtos e Serviços
 def produto(request):
     produtos = ProdutoServico.objects.all()  # Corrigido o nome da variável e da classe
@@ -230,3 +363,4 @@ def excluir_produto(request, produto_id):
     produto.delete()
     messages.success(request, f'O produto/serviço "{produto.nome}" foi excluída com sucesso!')
     return redirect('produto')
+
