@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block conteudo %}
+<!-- Conteúdo -->
+<div class="content d-flex flex-column">
+  <h3>Pesquisa, Desenvolvimento e Inovação</h3>
+  <div class="editor-area" contenteditable="true" placeholder="Digite aqui a gestão da qualidade..."></div>
+
+    <div class="footer-notes mt-auto">
+        <strong>Suporte á edição - Orientação</strong> <br>
+        Comente sobre o nível de qualidade dos produtos e/ou serviços da empresa e como ele é avaliado pelos clientes, parceiros e sua comparação com a concorrência.  
+
+        Um nível mínimo de qualidade será ou é mantido e aprimorado sistematicamente? Como? Indique se existe algum mecanismo formal ou informal de gestão da qualidade. 
+        Quais mecanismos a empresa utiliza ou utilizará para avaliar a satisfação dos clientes?
+        Quais as medidas para aprimorar os produtos e o atendimento? A empresa mantém cadastro com histórico de atendimento aos clientes?
+        Que tipo de garantias sobre o produto/serviço prestado?
+        Que ações complementares despertarão nos consumidores a preferência pela empresa, serviço ou produto, ao invés da concorrência?
+    </div>
+{% endblock conteudo %}
+
+{% block extra_js %}
+  <script src="{% static 'js/sidebar.js' %}"></script>
+{% endblock extra_js %}

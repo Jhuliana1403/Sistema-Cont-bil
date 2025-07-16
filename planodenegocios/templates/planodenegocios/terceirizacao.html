@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block conteudo %}
+<!-- Conteúdo -->
+<div class="content d-flex flex-column">
+  <h3>Terceirização e Equipe de Apoio Externo</h3>
+  <div class="editor-area" contenteditable="true" placeholder="Digite aqui a terceirização e equipe de apoio externo..."></div>
+
+    <div class="footer-notes mt-auto">
+        <strong>Suporte á edição - Orientação</strong> <br>
+        Existe alguma atividade da empresa que será delegada a terceiros? Junto a quais empresas e profissionais?
+        Quais os custos envolvidos? Quais os benefícios gerados por esta terceirização?
+        Além de prestadores de serviços, há outros profissionais externos apoiando o negócio, tais como consultores ou conselheiros? Como se dá esse apoio? Quais competências eles trazem ao negócio? Qual o custo?
+   </div>
+</div>
+{% endblock conteudo %}
+
+{% block extra_js %}
+  <script src="{% static 'js/sidebar.js' %}"></script>
+{% endblock extra_js %}

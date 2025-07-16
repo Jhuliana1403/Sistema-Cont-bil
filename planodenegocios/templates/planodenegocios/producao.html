@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block conteudo %}
+<!-- Conteúdo -->
+<div class="content d-flex flex-column">
+  <h3>Produção, Localização e Instalações</h3>
+  <div class="editor-area" contenteditable="true" placeholder="Digite aqui a produção, localização e instalações..."></div>
+
+  <div class="footer-notes mt-auto">
+    <strong>Suporte á edição - Orientação</strong> <br>
+    Forneça os dados sobre a infra-estrutura física disponível ou aquela que deverá ser criada. Se o empreendimento é uma indústria, comente sobre a capacidade de produção e eventuais planos de expansão. Se for comércio ou outro tipo de empreendimenro em que a localização geográfica é importante apresente informações sobr o "ponto e a região onde está instaladoo negócio."
+  </div>
+</div>
+{% endblock conteudo %}
+
+{% block extra_js %}
+  <script src="{% static 'js/sidebar.js' %}"></script>
+{% endblock extra_js %}

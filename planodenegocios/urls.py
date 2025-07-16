@@ -22,6 +22,21 @@ urlpatterns = [
     path('caracteristicas/', views.caracteristicas, name='caracteristicas'),
     path('estagio/', views.estagio, name='estagio'),
 
+    #Administração e Gestão
+    path('administracao/producao/', views.producao, name='producao'),
+    path('administracao/descricao/', views.descricao, name='descricao'),
+    path('administracao/equipe/', views.equipe, name='equipe'),
+    path('administracao/terceirizacao/', views.terceirizacao, name='terceirizacao'),
+    path('administracao/alianca/', views.alianca, name='alianca'),
+    path('administracao/pesquisa/', views.pesquisa, name='pesquisa'),
+    path('administracao/qualidade/', views.qualidade, name='qualidade'),
+
+    #Plano de Implantação
+    path('planodeimplantacao/analiserisco/', views.risco, name='risco'),
+    path('planodeimplantacao/fatores/', views.fatores, name='fatores'),
+    path('planodeimplantacao/cronograma/', views.cronograma, name='cronograma'),
+    path('planodeimplantacao/alternativa/', views.alternativa, name='alternativa'),
+
     # Investimentos e ampliações
     path('investimento/', views.investimento, name='investimento'),
     path('investimento/excluir/<int:investimento_id>/', views.excluir_investimento, name='excluir_investimento'),

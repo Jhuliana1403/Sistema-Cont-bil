@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block conteudo %}
+<!-- Conteúdo -->
+<div class="content d-flex flex-column">
+  <h3>Cronograma</h3>
+  <div class="editor-area" contenteditable="true" placeholder="Digite aqui os fatores críticos de sucesso.."></div>
+
+    <div class="footer-notes mt-auto">
+        <strong>Suporte á edição - Orientação</strong> <br>
+        Quais são as etapas pelas quais passará o empreendimento até que o negócio esteja efetivamente implantado (análise do mercado, elaboração do plano, obtenção de recursos, escolha do local, compras, registro legal, licenças de funcionamento...)? 
+
+        Quais os prazos e datas estabelecidos para o término de cada etapa do projeto? 
+
+        Faça um cronograma sucinto, que apresente minimante essas informações. 
+    </div>
+{% endblock conteudo %}
+
+{% block extra_js %}
+  <script src="{% static 'js/sidebar.js' %}"></script>
+{% endblock extra_js %}
