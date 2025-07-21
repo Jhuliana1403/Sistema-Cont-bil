@@ -308,6 +308,17 @@ class AlternativasEstrategicas(models.Model):
 
     def __str__(self):
         return f"Alternativas Estratégicas ({self.atualizado_em:%d/%m/%Y %H:%M})"
+class Socio(models.Model):
+    """
+    Cadastro muito simples de sócios.
+    Você pode trocar por um relacionamento com o usuário do Django,
+    se já existir um módulo de pessoas/usuários no seu sistema.
+    """
+    nome = models.CharField('Nome do sócio', max_length=100)
+
+    def __str__(self):
+        return self.nome
+
 
 class DistribuicaoLucro(models.Model):
     socio = models.ForeignKey(
