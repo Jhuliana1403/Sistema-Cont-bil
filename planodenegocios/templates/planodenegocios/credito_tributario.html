@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block conteudo %}
+<div class="container my-5">
+
+  <div class="card shadow-lg border-0 mb-4">
+    <div class="card-body">
+      <h2 class="card-title text-center mb-4">Créditos Tributários</h2>
+      <p class="text-muted text-center mb-4">
+        Informe as alíquotas de eventuais créditos tributários para cada item de despesa.
+      </p>
+
+      <form method="POST">
+        {% csrf_token %}
+        <table class="table table-bordered">
+          <thead>
+            <tr>
+              <th>Item de Despesa</th>
+              <th>Alíquota (%)</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for item in despesas_com_creditos %}
+            <tr>
+              <td>{{ item.despesa.nome }}</td>
+              <td>
+                <input 
+                  type="number" 
+                  step="0.01" 
+                  min="0" 
+                  name="aliquota_{{ item.despesa.id }}" 
+                  value="{{ item.aliquota }}">
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+        <div class="text-center mt-3">
+          <button type="submit" class="btn btn-success">Salvar Créditos</button>
+          <a href="{% url 'despesas' %}" class="btn btn-secondary">Voltar</a>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  {% if lista_calculos %}
+  <div class="card shadow-lg border-0">
+    <div class="card-body">
+      <h3 class="mb-4">Resumo dos Créditos Tributários Calculados</h3>
+      <table class="table table-bordered">
+        <thead>
+          <tr>
+            <th>Despesa</th>
+            <th>Valor da Despesa</th>
+            <th>Alíquota (%)</th>
+            <th>Crédito Tributário Calculado</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for item in lista_calculos %}
+          <tr>
+            <td>{{ item.nome }}</td>
+            <td>{{ item.valor_despesa }}</td>
+            <td>{{ item.aliquota }}</td>
+            <td>{{ item.valor_credito }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+  {% endif %}
+
+</div>
+{% endblock conteudo %}

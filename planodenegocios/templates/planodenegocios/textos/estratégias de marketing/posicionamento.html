@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block conteudo %}
+<div class="content d-flex flex-column">
+  <h3>Posicionamento</h3>
+
+  {% if messages %}
+    <div>
+      {% for message in messages %}
+        <div class="alert alert-success">{{ message }}</div>
+      {% endfor %}
+    </div>
+  {% endif %}
+
+  <form method="post">
+    {% csrf_token %}
+
+    <div class="editor-area" contenteditable="true" id="editor-posicionamento" placeholder="Digite aqui o posicionamento...">
+      {{ posicionamento.texto|safe }}
+    </div>
+
+    <textarea name="texto" id="texto" hidden></textarea>
+
+    <button type="submit" class="btn btn-success d-flex align-items-center gap-1">
+      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="18" fill="currentColor" class="bi bi-floppy" viewBox="0 0 16 16">
+        <path d="M11 2H9v3h2z"/>
+        <path d="M1.5 0h11.586a1.5 1.5 0 0 1 1.06.44l1.415 1.414A1.5 1.5 0 0 1 16 2.914V14.5a1.5 1.5 0 0 1-1.5 1.5h-13A1.5 1.5 0 0 1 0 14.5v-13A1.5 1.5 0 0 1 1.5 0M1 1.5v13a.5.5 0 0 0 .5.5H2v-4.5A1.5 1.5 0 0 1 3.5 9h9a1.5 1.5 0 0 1 1.5 1.5V15h.5a.5.5 0 0 0 .5-.5V2.914a.5.5 0 0 0-.146-.353l-1.415-1.415A.5.5 0 0 0 13.086 1H13v4.5A1.5 1.5 0 0 1 11.5 7h-7A1.5 1.5 0 0 1 3 5.5V1H1.5a.5.5 0 0 0-.5.5m3 4a.5.5 0 0 0 .5.5h7a.5.5 0 0 0 .5-.5V1H4zM3 15h10v-4.5a.5.5 0 0 0-.5-.5h-9a.5.5 0 0 0-.5.5z"/>
+      </svg>
+      Salvar
+    </button>
+
+  </form>
+
+  <div class="footer-notes mt-4">
+    <strong>Suporte à edição - Orientação:</strong>
+    <p>O posicionamento é o modo de a empresa marcar presença e se distinguir da concorrência.</p>
+    <p>Como a empresa deseja ser reconhecida pelo mercado? Que imagem deseja passar? Como a empresa deseja que seus produtos
+      e serviços sejam reconhecidos pelo mercado?</p> 
+    <p>Dentre as possíveis estratégias de posicionamento (melhor qualidade; melhor atendimento; preço mais baixo; maior valor para o cliente;
+      maior segurança; maior rapidez; mais personalizado; mais prático; de tecnologia mais avançada; etc), indique e justifique pela empresa.
+      Como a empresa fará para que essa imagem seja percebida pelos clientes?</p>
+  </div>
+</div>
+{% endblock conteudo %}
+
+{% block extra_js %}
+<script src="{% static 'js/sidebar.js' %}"></script>
+<script src="{% static 'js/textos-js/exibir-posicionamento.js' %}"></script>
+{% endblock extra_js %}
