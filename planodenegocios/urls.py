@@ -57,4 +57,7 @@ urlpatterns = [
     path('despesas/excluir/<int:mes>/<int:id>/', views.excluir_despesa, name='excluir_despesa'),
     path('despesas/credito-tributario/', views.credito_tributario_view, name='credito_tributario'),
 
+    #Valores
+    path('remuneracao_dos_socios/', views.remumeração_dos_socios, name='remumeração_dos_socios'),
+    path('valores/', views.distribuicao_valores_view, name='valores'),
 ]

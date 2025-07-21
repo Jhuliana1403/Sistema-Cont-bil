@@ -308,3 +308,48 @@ class AlternativasEstrategicas(models.Model):
 
     def __str__(self):
         return f"Alternativas Estratégicas ({self.atualizado_em:%d/%m/%Y %H:%M})"
+
+class DistribuicaoLucro(models.Model):
+    socio = models.ForeignKey(
+        Socio,
+        verbose_name='Sócio',
+        on_delete=models.CASCADE,
+        related_name='distribuicoes'
+        
+    )
+    valor_inicial = models.DecimalField(
+        'Valor inicial (mês 1)',
+        max_digits=12,
+        decimal_places=2,
+        default=0
+    )
+    empresa = models.ForeignKey(
+        Empresa,  # ou Projeto
+        on_delete=models.CASCADE,
+        related_name='distribuicoes_lucro'
+    )
+    mes_referencia = models.DateField('Mês de Referência')  # ex: 2025-07-01
+
+    class Meta:
+        verbose_name = 'Remuneração dos Sócios – Lucros e Dividendos'
+        verbose_name_plural = verbose_name
+
+    def __str__(self):
+        return f"{self.socio} - {self.mes_referencia.strftime('%m/%Y')} - R$ {self.valor_inicial}"
+
+class ValorMensalDistribuicao(models.Model):
+    distribuicao = models.ForeignKey(
+        'DistribuicaoLucro',  # referencia a remuneração
+        on_delete=models.CASCADE,
+        related_name='valores_mensais'
+    )
+    mes = models.PositiveIntegerField()  # 1 a 12
+    valor = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    constante = models.BooleanField(default=True)  # Se os valores são constantes
+
+    class Meta:
+        verbose_name = 'Valor Mensal da Distribuição'
+        verbose_name_plural = 'Valores Mensais das Distribuições'
+
+    def __str__(self):
+        return f"{self.distribuicao.socio.nome} - Mês {self.mes}: R$ {self.valor}"

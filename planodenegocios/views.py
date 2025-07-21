@@ -3,7 +3,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 
 from decimal import Decimal
 # Importa o modelo Investimento do arquivo models.py
-from .models import Investimento, CreditoTributario, AlternativasEstrategicas, Cronograma, FatoresCriticosSucesso, GestaoQualidade, Ampliacoes, ProdutoServico, CustoProducao, Funcionario, EncargoGlobal, DespesaAdministrativa, DespesaMensal, ResumoExecutivo, HistoricoMotivacao, ModeloNegocio, CaracteristicasBeneficios, EstagioDesenvolvimento, AnaliseSetor, MercadoPotencial, AnaliseConcorrencia, Posicionamento, FocoSegmentacao, PlanoPenetracaoMercado, ProdutosServicosInsumos, DescricaoLegalEstruturaSocietaria, Equipe, TerceirizacaoEquipeApoio, DistribuicaoComercializacao, AliancasParcerias, PesquisaDesenvolvimentoInovacao, AnaliseRiscos
+from .models import Investimento, CreditoTributario, ValorMensalDistribuicao, DistribuicaoLucro, Socio, AlternativasEstrategicas, Cronograma, FatoresCriticosSucesso, GestaoQualidade, Ampliacoes, ProdutoServico, CustoProducao, Funcionario, EncargoGlobal, DespesaAdministrativa, DespesaMensal, ResumoExecutivo, HistoricoMotivacao, ModeloNegocio, CaracteristicasBeneficios, EstagioDesenvolvimento, AnaliseSetor, MercadoPotencial, AnaliseConcorrencia, Posicionamento, FocoSegmentacao, PlanoPenetracaoMercado, ProdutosServicosInsumos, DescricaoLegalEstruturaSocietaria, Equipe, TerceirizacaoEquipeApoio, DistribuicaoComercializacao, AliancasParcerias, PesquisaDesenvolvimentoInovacao, AnaliseRiscos
 
 from django.contrib import messages
 
@@ -683,4 +683,75 @@ def credito_tributario_view(request):
     return render(request, 'planodenegocios/credito_tributario.html', {
         'despesas_com_creditos': despesas_com_creditos,
         'lista_calculos': lista_calculos,
+    })
+
+#Valores
+def remumeração_dos_socios(request):
+    if request.method == 'POST':
+        # Limpa todas as distribuições existentes para evitar duplicados
+        DistribuicaoLucro.objects.all().delete()
+        empresa_obj = Empresa.objects.first()
+
+        # Pega todos os sócios e valores enviados no POST
+        socios_valores = []
+        for key, value in request.POST.items():
+            if key.startswith('socio_'):
+                # Extrai o índice do campo para pegar o valor correspondente
+                index = key.split('_')[1]
+                nome_socio = value.strip()
+                valor_str = request.POST.get(f'valor_{index}', '0').replace(',', '.').strip()
+                try:
+                    valor = float(valor_str) if valor_str else 0
+                except ValueError:
+                    valor = 0
+
+                if nome_socio:  # só processa se o nome não for vazio
+                    socios_valores.append((nome_socio, valor))
+
+        # Salva os sócios e suas distribuições
+        for nome_socio, valor in socios_valores:
+            socio_obj, created = Socio.objects.get_or_create(nome=nome_socio)
+            DistribuicaoLucro.objects.create(
+                socio=socio_obj,
+                valor_inicial=valor,
+                mes_referencia=date.today(), # ou outra data que fizer sentido
+                empresa=empresa_obj
+            )
+
+        # Redireciona para a mesma página para mostrar os dados atualizados
+        return redirect('remumeração_dos_socios')  # ajuste o nome da url conforme seu urls.py
+
+    else:
+        # No GET, recupera todas as distribuições para mostrar no form
+        distribuicoes = DistribuicaoLucro.objects.select_related('socio').all()
+        return render(request, 'planodenegocios/remumeração_dos_socios.html', {
+            'distribuicoes': distribuicoes
+        })
+
+def distribuicao_valores_view(request):
+    distribuicoes = DistribuicaoLucro.objects.all().select_related('socio')
+    socios_valores = []
+
+    for dist in distribuicoes:
+        # Garante que os 12 valores mensais existem
+        if not dist.valores_mensais.exists():
+            for mes in range(1, 13):
+                ValorMensalDistribuicao.objects.create(
+                    distribuicao=dist,
+                    mes=mes,
+                    valor=dist.valor_inicial,
+                    constante=True
+                )
+
+        valores_mensais = ValorMensalDistribuicao.objects.filter(distribuicao=dist).order_by('mes')
+        valores = [f"{v.valor:.2f}".replace('.', ',') for v in valores_mensais]
+        
+        socios_valores.append({
+            'nome': dist.socio.nome,
+            'valores': valores,
+        })
+
+    return render(request, 'planodenegocios/valores.html', {
+        'socios_valores': socios_valores,
+        'meses': range(1, 13)
     })
