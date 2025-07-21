@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block conteudo %}
+<!-- Conteúdo -->
+<div class="content d-flex flex-column">
+  <h3>Equipe</h3>
+
+  <form method="post">
+    {% csrf_token %}
+    <div class="editor-area" contenteditable="true" id="editor-equipe" placeholder="Digite aqui a equipe...">
+      {{ equipe.texto|safe }}
+    </div>
+
+    <textarea name="texto" id="texto" hidden></textarea>
+
+    <button type="submit" class="btn btn-success d-flex align-items-center gap-1">
+      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="18" fill="currentColor" class="bi bi-floppy" viewBox="0 0 16 16">
+        <path d="M11 2H9v3h2z"/>
+        <path d="M1.5 0h11.586a1.5 1.5 0 0 1 1.06.44l1.415 1.414A1.5 1.5 0 0 1 16 2.914V14.5a1.5 1.5 0 0 1-1.5 1.5h-13A1.5 1.5 0 0 1 0 14.5v-13A1.5 1.5 0 0 1 1.5 0M1 1.5v13a.5.5 0 0 0 .5.5H2v-4.5A1.5 1.5 0 0 1 3.5 9h9a1.5 1.5 0 0 1 1.5 1.5V15h.5a.5.5 0 0 0 .5-.5V2.914a.5.5 0 0 0-.146-.353l-1.415-1.415A.5.5 0 0 0 13.086 1H13v4.5A1.5 1.5 0 0 1 11.5 7h-7A1.5 1.5 0 0 1 3 5.5V1H1.5a.5.5 0 0 0-.5.5m3 4a.5.5 0 0 0 .5.5h7a.5.5 0 0 0 .5-.5V1H4zM3 15h10v-4.5a.5.5 0 0 0-.5-.5h-9a.5.5 0 0 0-.5.5z"/>
+      </svg>
+      Salvar
+    </button>
+
+  </form>
+
+  <div class="footer-notes mt-4">
+    <strong>Suporte á edição - Orientação</strong> <br>
+    <p>Quais os sócios e parceiros do negócio? Explique o papel de cada um na sociedade e o que dela eles esperam.</p>
+    <p>Qual a formação, os conhecimentos e as experiências da equipe gestora? Quais serão suas tarefas? Por que eles são capazes de gerenciá-lo?</p>  
+    <p>Indique os demais membros da equipe do empreendimento e suas funções. Se forem muitos, concentre-se nos principais cargos. Estes profissionais já foram definidos ou ainda serão contratados?</p> 
+  </div>
+</div>
+{% endblock conteudo %}
+
+{% block extra_js %}
+<script src="{% static 'js/sidebar.js' %}"></script>
+<script src="{% static 'js/textos-js/exibir-equipe.js' %}"></script>
+{% endblock extra_js %}
