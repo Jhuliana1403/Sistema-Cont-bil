@@ -49,4 +49,12 @@ urlpatterns = [
     path('cadastrar_produtoservicos/', views.cadastrar_produto, name='cadastrar_produto'),
     path('produtoservicos/', views.produto, name='produto'),
     path('excluir_produtoservicos/<int:produto_id>', views.excluir_produto, name='excluir_produto'),
+
+    path('despesas/', views.despesas, name='despesas'),  # redireciona para mês 1
+    path('despesas/<int:mes>/', views.despesas_mes, name='despesas_mes'),
+    path('despesas/cadastrar/<int:mes>/', views.cadastrar_despesa, name='cadastrar_despesa'),
+    path('despesas/editar/<int:mes>/<int:id>/', views.editar_despesa, name='editar_despesa'),
+    path('despesas/excluir/<int:mes>/<int:id>/', views.excluir_despesa, name='excluir_despesa'),
+    path('despesas/credito-tributario/', views.credito_tributario_view, name='credito_tributario'),
+
 ]
