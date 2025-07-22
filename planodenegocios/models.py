@@ -308,6 +308,13 @@ class AlternativasEstrategicas(models.Model):
 
     def __str__(self):
         return f"Alternativas Estratégicas ({self.atualizado_em:%d/%m/%Y %H:%M})"
+    
+class Empresa(models.Model):
+    nome = models.CharField('Nome da Empresa', max_length=100)
+
+    def __str__(self):
+        return self.nome
+    
 class Socio(models.Model):
     """
     Cadastro muito simples de sócios.
