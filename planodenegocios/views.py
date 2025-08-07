@@ -291,6 +291,7 @@ def alternativa(request):
         "alt": alt
     })
 
+#Plano Financeiro
 def investimento(request):
     if request.method == 'POST':
         if 'form-investimento' in request.POST:  # Marca no input hidden
