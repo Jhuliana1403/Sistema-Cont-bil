@@ -1,15 +1,21 @@
 # Importa as funções necessárias do Django para renderizar templates e redirecionar requisições
 from django.shortcuts import render, redirect, get_object_or_404
 
-from decimal import Decimal
+from decimal import Decimal, InvalidOperation
 # Importa o modelo Investimento do arquivo models.py
-from .models import Investimento, CreditoTributario, AlternativasEstrategicas, Terceiro, Cronograma, FatoresCriticosSucesso, GestaoQualidade, Ampliacoes, ProdutoServico, CustoProducao, Funcionario, EncargoGlobal, DespesaAdministrativa, DespesaMensal, ResumoExecutivo, HistoricoMotivacao, ModeloNegocio, CaracteristicasBeneficios, EstagioDesenvolvimento, AnaliseSetor, MercadoPotencial, AnaliseConcorrencia, Posicionamento, FocoSegmentacao, PlanoPenetracaoMercado, ProdutosServicosInsumos, DescricaoLegalEstruturaSocietaria, Equipe, TerceirizacaoEquipeApoio, DistribuicaoComercializacao, AliancasParcerias, PesquisaDesenvolvimentoInovacao, AnaliseRiscos
+from .models import Investimento, CreditoTributario, AlternativasEstrategicas, Cronograma, FatoresCriticosSucesso, GestaoQualidade, Ampliacoes, ProdutoServico, CustoProducao
+from .models import Funcionario, EncargoGlobal, DespesaAdministrativa, DespesaMensal, ResumoExecutivo, HistoricoMotivacao, ModeloNegocio, CaracteristicasBeneficios, EstagioDesenvolvimento
+from .models import AnaliseSetor, MercadoPotencial, AnaliseConcorrencia, Posicionamento, FocoSegmentacao, PlanoPenetracaoMercado, ProdutosServicosInsumos, DescricaoLegalEstruturaSocietaria
+from .models import Equipe, TerceirizacaoEquipeApoio, DistribuicaoComercializacao, AliancasParcerias, PesquisaDesenvolvimentoInovacao, AnaliseRiscos
+from .models import ProdutoServico, ReceitaOperacional, ReceitaNaoOperacional
 
 from django.contrib import messages
 
 from django.db.models import Sum
 
 from django.forms import modelformset_factory
+
+from django.db import transaction
 
 # Resumo Executivo
 def index(request):
@@ -727,3 +733,84 @@ def credito_tributario_view(request):
         'despesas_com_creditos': despesas_com_creditos,
         'lista_calculos': lista_calculos,
     })
+
+#RECEITAS
+def _to_decimal(raw: str) -> Decimal:
+    if raw is None:
+        return Decimal("0")
+    raw = raw.strip().replace(",", ".")
+    if raw == "":
+        return Decimal("0")
+    try:
+        return Decimal(raw)
+    except InvalidOperation:
+        return Decimal("0")
+
+def receitas(request):
+    itens = (ProdutoServico.objects
+             .only('id', 'nome', 'unidade_venda', 'preco_venda')
+             .order_by('nome'))
+
+    # sempre busque do banco (nada de cache local antes do POST)
+    outras, _ = ReceitaNaoOperacional.objects.get_or_create(
+        mes_referencia=1, descricao='Outras receitas'
+    )
+
+    if request.method == 'POST':
+        try:
+            with transaction.atomic():
+                # salva cada produto/serviço de forma idempotente
+                for p in itens:
+                    qtd = _to_decimal(request.POST.get(f"q_{p.id}"))
+                    rec, _ = ReceitaOperacional.objects.get_or_create(
+                        item=p, mes_referencia=1
+                    )
+                    rec.quantidade_inicial = qtd
+                    rec.save()
+
+                # salva "outras receitas"
+                outras.valor_inicial = _to_decimal(request.POST.get("outras_receitas"))
+                outras.save()
+
+            messages.success(request, "Receitas salvas com sucesso!")
+            return redirect('receitas')  # novo GET, garantindo leitura fresca do BD
+
+        except Exception as e:
+            messages.error(request, f"Erro ao salvar: {e}")
+
+    # GET (ou pós-redirect): sempre leia do BD atualizado
+    receitas_map = {
+        r.item_id: r.quantidade_inicial
+        for r in ReceitaOperacional.objects
+             .filter(mes_referencia=1, item__in=itens)
+             .only('item_id', 'quantidade_inicial')
+    }
+
+    total_faturamento = Decimal("0")
+    linhas = []
+    for p in itens:
+        qtd = receitas_map.get(p.id, Decimal("0"))
+        preco = p.preco_venda or Decimal("0")
+        total_faturamento += qtd * preco
+
+        # string já no formato aceito por <input type="number"> (ponto, sem locale)
+        qtd_str = f"{qtd:.2f}".replace(",", ".")  # Decimal já usa ponto, mas garantimos
+
+        linhas.append({
+            "id": p.id,
+            "nome": p.nome,
+            "unidade": p.unidade_venda,
+            "quantidade": qtd,        # fica pra cálculos, se precisar
+            "quantidade_str": qtd_str # vai direto no value do input
+        })
+
+    outras_str = f"{(outras.valor_inicial or Decimal('0')):.2f}"
+
+    contexto = {
+        "linhas": linhas,
+        "total_faturamento": total_faturamento,
+        "outras_receitas": outras.valor_inicial or Decimal("0"),
+        "outras_receitas_str": outras_str,
+    }
+    return render(request, 'planodenegocios/receitas.html', contexto)
+
