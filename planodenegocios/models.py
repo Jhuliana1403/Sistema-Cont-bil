@@ -1,7 +1,7 @@
 from django.db import models
 from decimal import Decimal
 from django.db import models
-from django.core.validators import MinValueValidator
+from django.core.validators import MinValueValidator, MaxValueValidator
 
 class Investimento(models.Model):
     data = models.DateField(null=True, blank=True)
@@ -375,3 +375,42 @@ class ReceitaNaoOperacional(models.Model):
 
     def __str__(self):
         return f'{self.descricao} (mês {self.mes_referencia})'
+
+#IMPOSTOS
+class ImpostoLucro(models.Model):
+    """Alíquota média de impostos sobre o lucro para 5 anos."""
+    aliquota_ano1 = models.DecimalField(max_digits=5, decimal_places=2, default=0,
+                                        validators=[MinValueValidator(Decimal('0')), MaxValueValidator(Decimal('100'))])
+    aliquota_ano2 = models.DecimalField(max_digits=5, decimal_places=2, default=0,
+                                        validators=[MinValueValidator(Decimal('0')), MaxValueValidator(Decimal('100'))])
+    aliquota_ano3 = models.DecimalField(max_digits=5, decimal_places=2, default=0,
+                                        validators=[MinValueValidator(Decimal('0')), MaxValueValidator(Decimal('100'))])
+    aliquota_ano4 = models.DecimalField(max_digits=5, decimal_places=2, default=0,
+                                        validators=[MinValueValidator(Decimal('0')), MaxValueValidator(Decimal('100'))])
+    aliquota_ano5 = models.DecimalField(max_digits=5, decimal_places=2, default=0,
+                                        validators=[MinValueValidator(Decimal('0')), MaxValueValidator(Decimal('100'))])
+
+    def __str__(self):
+        return "Impostos sobre o lucro (5 anos)"
+
+
+class ImpostoVendaItem(models.Model):
+    """Alíquotas sobre vendas por produto/serviço para 5 anos."""
+    item = models.ForeignKey('planodenegocios.ProdutoServico', on_delete=models.CASCADE, related_name='impostos_venda')
+    aliquota_ano1 = models.DecimalField(max_digits=5, decimal_places=2, default=0,
+                                        validators=[MinValueValidator(Decimal('0')), MaxValueValidator(Decimal('100'))])
+    aliquota_ano2 = models.DecimalField(max_digits=5, decimal_places=2, default=0,
+                                        validators=[MinValueValidator(Decimal('0')), MaxValueValidator(Decimal('100'))])
+    aliquota_ano3 = models.DecimalField(max_digits=5, decimal_places=2, default=0,
+                                        validators=[MinValueValidator(Decimal('0')), MaxValueValidator(Decimal('100'))])
+    aliquota_ano4 = models.DecimalField(max_digits=5, decimal_places=2, default=0,
+                                        validators=[MinValueValidator(Decimal('0')), MaxValueValidator(Decimal('100'))])
+    aliquota_ano5 = models.DecimalField(max_digits=5, decimal_places=2, default=0,
+                                        validators=[MinValueValidator(Decimal('0')), MaxValueValidator(Decimal('100'))])
+
+    class Meta:
+        unique_together = ('item',)  # um registro por produto
+
+    def __str__(self):
+        return f"Impostos de venda - {self.item.nome}"
+
