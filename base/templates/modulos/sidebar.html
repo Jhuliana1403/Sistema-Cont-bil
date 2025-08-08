@@ -59,7 +59,13 @@
       </strong>
       <div class="sidebar-item-content">
         <ul>
-          <li>Clique aqui para detalhar Administração e Gestão...</li>
+          <li><a href="{% url 'producao' %}">Produção, Localização e Instalações</li></a>
+          <li><a href="{% url 'descricao' %}">Descrição Legal e Estrutura Societária</li></a>
+          <li><a href="{% url 'equipe' %}">Equipe</li></a>
+          <li><a href="{% url 'terceirizacao' %}">Terceirização e Equipe de Apoio Externo</li></a>
+          <li><a href="{% url 'alianca' %}">Alianças e Parcerias</li></a>
+          <li><a href="{% url 'pesquisa' %}">Pesquisa, Desenvolvimento e Inovação</li></a>
+          <li><a href="{% url 'qualidade' %}">Gestão da Qualidade</li></a>
         </ul>
       </div>
     </li>
@@ -69,7 +75,10 @@
       </strong>
       <div class="sidebar-item-content">
         <ul>
-          <li>Clique aqui para detalhar Plano de Implantação...</li>
+          <li><a href="{% url 'risco' %}">Análise de Riscos</li></a>
+          <li><a href="{% url 'fatores' %}">Fatores Críticos de Sucesso</li></a>
+          <li><a href="{% url 'cronograma' %}">Cronograma</a></li>
+          <li><a href="{% url 'alternativa' %}">Alternativas Estratégicas</a></li>
         </ul>
       </div>
     </li>
@@ -81,6 +90,7 @@
         <ul>
           <li><a href="{% url 'investimento' %}">Investimento</a></li>
           <li><a href="{% url 'equipe_propria' %}">Equipe Própria</a></li>
+          <li><a href="{% url 'despesas' %}">Despesas Administrativas</a></li>
           <li><a href="{% url 'produto' %}">Produtos, Serviços e Insumos</a></li>
         </ul>
       </div>

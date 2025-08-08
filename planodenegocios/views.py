@@ -1,60 +1,296 @@
 # Importa as funções necessárias do Django para renderizar templates e redirecionar requisições
 from django.shortcuts import render, redirect, get_object_or_404
 
+from decimal import Decimal
 # Importa o modelo Investimento do arquivo models.py
-from .models import Investimento, Ampliacoes, ProdutoServico, CustoProducao
+from .models import Investimento, CreditoTributario, AlternativasEstrategicas, Cronograma, FatoresCriticosSucesso, GestaoQualidade, Ampliacoes, ProdutoServico, CustoProducao, Funcionario, EncargoGlobal, DespesaAdministrativa, DespesaMensal, ResumoExecutivo, HistoricoMotivacao, ModeloNegocio, CaracteristicasBeneficios, EstagioDesenvolvimento, AnaliseSetor, MercadoPotencial, AnaliseConcorrencia, Posicionamento, FocoSegmentacao, PlanoPenetracaoMercado, ProdutosServicosInsumos, DescricaoLegalEstruturaSocietaria, Equipe, TerceirizacaoEquipeApoio, DistribuicaoComercializacao, AliancasParcerias, PesquisaDesenvolvimentoInovacao, AnaliseRiscos
 
 from django.contrib import messages
 
-# View principal que renderiza a página inicial do plano de negócios
+from django.db.models import Sum
+
+from django.forms import modelformset_factory
+
+# Resumo Executivo
 def index(request):
-    return render(request, 'planodenegocios/index.html')
+    resumo, created = ResumoExecutivo.objects.get_or_create(id=1)
 
-# View que renderiza a página de análise de setor
-def analise_setor(request):
-    return render(request, 'planodenegocios/analise_setor.html')
+    if request.method == "POST":
+        resumo.texto = request.POST.get("texto", "")
+        resumo.save()
+        return redirect("inicio")  
 
-# View que renderiza a página de mercado potencial
-def mercado_potencial(request):
-    return render(request, 'planodenegocios/mercado_potencial.html')
+    return render(request, "planodenegocios/textos/index.html", {"resumo": resumo})
 
-# View que renderiza a página de análise da concorrência
-def analise_concorrencia(request):
-    return render(request, 'planodenegocios/analise_concorrencia.html')
+#O negócio
 
-# View que renderiza a página de posicionamento
-def posicionamento(request):
-    return render(request, 'planodenegocios/posicionamento.html')
-
-# View que renderiza a página de foco e segmentação
-def foco(request):
-    return render(request, 'planodenegocios/focosegmentacao.html')
-
-# View que renderiza a página do plano de marketing ou ações
-def plano(request):
-    return render(request, 'planodenegocios/plano.html')
-
-# View que renderiza a página de distribuição
-def distribuicao(request):
-    return render(request, 'planodenegocios/distribuicao.html')
-
-# View que renderiza a página de histórico da empresa ou projeto
 def historico(request):
-    return render(request, 'planodenegocios/historico.html')
+    historico, created = HistoricoMotivacao.objects.get_or_create(id=1)
 
-# View que renderiza a página de modelo de negócio
+    if request.method == "POST":
+        historico.texto = request.POST.get("texto", "")
+        historico.save()
+        return redirect("historico")  # nome da URL
+
+    return render(request, "planodenegocios/textos/o negocio/historico.html", {"historico": historico})
+
+
 def modelo(request):
-    return render(request, 'planodenegocios/modelo.html')
+    modelo, created = ModeloNegocio.objects.get_or_create(id=1)
 
-# View que renderiza a página de características do produto ou serviço
+    if request.method == "POST":
+        modelo.texto = request.POST.get("texto", "")
+        modelo.save()
+        return redirect("modelo")  # nome da URL
+
+    return render(request, "planodenegocios/textos/o negocio/modelo.html", {"modelo": modelo})
+
+#Produtos e Serviços
 def caracteristicas(request):
-    return render(request, 'planodenegocios/caracteristicas.html')
+    caracteristicas, created = CaracteristicasBeneficios.objects.get_or_create(id=1)
 
-# View que renderiza a página de estágio de desenvolvimento
+    if request.method == "POST":
+        caracteristicas.texto = request.POST.get("texto", "")
+        caracteristicas.save()
+        return redirect("caracteristicas")  
+
+    return render(request, "planodenegocios/textos/produtos e serviços/caracteristicas.html", {"caracteristicas": caracteristicas})
+
 def estagio(request):
-    return render(request, 'planodenegocios/estagio.html')
+    estagio, created = EstagioDesenvolvimento.objects.get_or_create(id=1)
 
-# View principal para a funcionalidade de investimentos
+    if request.method == "POST":
+        estagio.texto = request.POST.get("texto", "")
+        estagio.save()
+        return redirect("estagio")  
+
+    return render(request, "planodenegocios/textos/produtos e serviços/estagio.html", {"estagio": estagio})
+
+#Ambiente de negócio
+def analise_setor(request):
+    analise, created = AnaliseSetor.objects.get_or_create(id=1)
+
+    if request.method == "POST":
+        analise.texto = request.POST.get("texto", "")
+        analise.save()
+        return redirect("analise_setor")  
+    return render(request, "planodenegocios/textos/o ambiente de negócio/analise_setor.html", {"analise": analise})
+
+def mercado_potencial(request):
+    mercado, created = MercadoPotencial.objects.get_or_create(id=1)
+
+    if request.method == "POST":
+        texto = request.POST.get("texto", "")
+        mercado.texto = texto
+        mercado.save()
+        messages.success(request, "Mercado potencial salvo com sucesso!")
+        return redirect("mercado_potencial") 
+
+    return render(request, "planodenegocios/textos/o ambiente de negócio/mercado_potencial.html", {"mercado": mercado})
+
+def analise_concorrencia(request):
+    analise, created = AnaliseConcorrencia.objects.get_or_create(id=1)
+
+    if request.method == "POST":
+        texto = request.POST.get("texto", "")
+        analise.texto = texto
+        analise.save()
+        messages.success(request, "Análise de concorrência salva com sucesso!")
+        return redirect("analise_concorrencia")  
+
+    return render(request, "planodenegocios/textos/o ambiente de negócio/analise_concorrencia.html", {"analise": analise})
+
+#Estratégias de Marketing
+def posicionamento(request):
+    pos, created = Posicionamento.objects.get_or_create(id=1)
+
+    if request.method == "POST":
+        texto = request.POST.get("texto", "")
+        pos.texto = texto
+        pos.save()
+        messages.success(request, "Posicionamento salvo com sucesso!")
+        return redirect("posicionamento") 
+
+    return render(request, "planodenegocios/textos/estratégias de marketing/posicionamento.html", {"posicionamento": pos})
+
+
+def foco(request):
+    foco, created = FocoSegmentacao.objects.get_or_create(id=1)
+
+    if request.method == "POST":
+        foco.texto = request.POST.get("texto", "")
+        foco.save()
+        return redirect("foco")  
+
+    return render(request, "planodenegocios/textos/estratégias de marketing/focosegmentacao.html", {"foco": foco})
+
+
+def plano(request):
+    plano, created = PlanoPenetracaoMercado.objects.get_or_create(id=1)
+
+    if request.method == "POST":
+        plano.texto = request.POST.get("texto", "")
+        plano.save()
+        return redirect("plano")  
+
+    return render(request, "planodenegocios/textos/estratégias de marketing/plano.html", {"plano": plano})
+
+def distribuicao(request):
+    distribuicao, created = DistribuicaoComercializacao.objects.get_or_create(id=1)
+
+    if request.method == "POST":
+        distribuicao.texto = request.POST.get("texto", "")
+        distribuicao.save()
+        return redirect("distribuicao") 
+
+    return render(request, "planodenegocios/textos/estratégias de marketing/distribuicao.html", {"distribuicao": distribuicao})
+
+#Administração e Gestão
+def producao(request):
+    psi, created = ProdutosServicosInsumos.objects.get_or_create(id=1)
+
+    if request.method == "POST":
+        psi.texto = request.POST.get("texto", "")
+        psi.save()
+        messages.success(request, "Texto salvo com sucesso.")
+        return redirect("producao")
+
+    return render(request, "planodenegocios/textos/administração e gestão/producao.html", {
+        "psi": psi
+    })
+
+def descricao(request):
+    desc, created = DescricaoLegalEstruturaSocietaria.objects.get_or_create(id=1)
+
+    if request.method == "POST":
+        desc.texto = request.POST.get("texto", "")
+        desc.save()
+        messages.success(request, "Texto salvo com sucesso.")
+        return redirect("descricao")
+
+    return render(request, "planodenegocios/textos/administração e gestão/descricao.html", {
+        "desc": desc
+    })
+
+def equipe(request):
+    equipe, created = Equipe.objects.get_or_create(id=1)
+
+    if request.method == "POST":
+        equipe.texto = request.POST.get("texto", "")
+        equipe.save()
+        messages.success(request, "Texto salvo com sucesso.")
+        return redirect("equipe")
+
+    return render(request, "planodenegocios/textos/administração e gestão/equipe.html", {
+        "equipe": equipe
+    })
+
+
+def terceirizacao(request):
+    apoio, created = TerceirizacaoEquipeApoio.objects.get_or_create(id=1)
+
+    if request.method == "POST":
+        apoio.texto = request.POST.get("texto", "")
+        apoio.save()
+        messages.success(request, "Texto salvo com sucesso.")
+        return redirect("terceirizacao")
+
+    return render(request, "planodenegocios/textos/administração e gestão/terceirizacao.html", {
+        "apoio": apoio
+    })
+
+def alianca(request):
+    alianças, created = AliancasParcerias.objects.get_or_create(id=1)
+
+    if request.method == "POST":
+        alianças.texto = request.POST.get("texto", "")
+        alianças.save()
+        messages.success(request, "Texto salvo com sucesso.")
+        return redirect("alianca")
+
+    return render(request, "planodenegocios/textos/administração e gestão/alianca.html", {
+        "aliancas": alianças
+    })
+
+def pesquisa(request):
+    pdi, created = PesquisaDesenvolvimentoInovacao.objects.get_or_create(id=1)
+
+    if request.method == "POST":
+        pdi.texto = request.POST.get("texto", "")
+        pdi.save()
+        messages.success(request, "Texto salvo com sucesso.")
+        return redirect("pesquisa")
+
+    return render(request, "planodenegocios/textos/administração e gestão/pesquisa.html", {
+        "pdi": pdi
+    })
+
+def qualidade(request):
+    gestao, created = GestaoQualidade.objects.get_or_create(id=1)
+
+    if request.method == "POST":
+        gestao.texto = request.POST.get("texto", "")
+        gestao.save()
+        messages.success(request, "Texto salvo com sucesso.")
+        return redirect("qualidade")
+
+    return render(request, "planodenegocios/textos/administração e gestão/qualidade.html", {
+        "gestao": gestao
+    })
+
+#Plano de Implantação
+def risco(request):
+    analise, created = AnaliseRiscos.objects.get_or_create(id=1)
+
+    if request.method == "POST":
+        analise.texto = request.POST.get("texto", "")
+        analise.save()
+        messages.success(request, "Texto salvo com sucesso.")
+        return redirect("risco")
+
+    return render(request, "planodenegocios/textos/plano de implantação/analiseriscos.html", {
+        "analise": analise
+    })
+
+def fatores(request):
+    fatores, created = FatoresCriticosSucesso.objects.get_or_create(id=1)
+
+    if request.method == "POST":
+        fatores.texto = request.POST.get("texto", "")
+        fatores.save()
+        messages.success(request, "Texto salvo com sucesso.")
+        return redirect("fatores")
+
+    return render(request, "planodenegocios/textos/plano de implantação/fatores.html", {
+        "fatores": fatores
+    })
+
+def cronograma(request):
+    cronograma_obj, created = Cronograma.objects.get_or_create(id=1)
+
+    if request.method == "POST":
+        cronograma_obj.texto = request.POST.get("texto", "")
+        cronograma_obj.save()
+        messages.success(request, "Texto salvo com sucesso.")
+        return redirect("cronograma")
+
+    return render(request, "planodenegocios/textos/plano de implantação/cronograma.html", {
+        "cronograma": cronograma_obj
+    })
+
+def alternativa(request):
+    alt, created = AlternativasEstrategicas.objects.get_or_create(id=1)
+
+    if request.method == "POST":
+        alt.texto = request.POST.get("texto", "")
+        alt.save()
+        messages.success(request, "Texto salvo com sucesso.")
+        return redirect("alternativa")
+
+    return render(request, "planodenegocios/textos/plano de implantação/alternativa.html", {
+        "alt": alt
+    })
+
 def investimento(request):
     if request.method == 'POST':
         if 'form-investimento' in request.POST:  # Marca no input hidden
@@ -126,11 +362,6 @@ def excluir_ampliacao(request, ampliacao_id):
     ampliacao.delete()
     messages.success(request, f'A ampliação "{ampliacao.descricao}" foi excluída com sucesso!')
     return redirect('investimento')
-
-from .models import Funcionario, EncargoGlobal, DespesaMensal
-from django.shortcuts import render, redirect
-from django.contrib import messages
-from decimal import Decimal
 
 def equipe_propria(request):
     if request.method == 'POST':
@@ -333,3 +564,123 @@ def excluir_produto(request, produto_id):
     messages.success(request, f'O produto/serviço "{produto.nome}" foi excluída com sucesso!')
     return redirect('produto')
 
+
+#Despesas administrativas
+def despesas(request):
+    # Redireciona para o mês 1 por padrão
+    return redirect('despesas_mes', mes=1)
+
+def despesas_mes(request, mes=None):
+    if mes is None:
+        mes = 1
+
+    despesas = DespesaAdministrativa.objects.filter(mes=mes)
+    total_mes = despesas.aggregate(Sum('valor'))['valor__sum'] or 0
+    total_geral = DespesaAdministrativa.objects.aggregate(Sum('valor'))['valor__sum'] or 0
+    meses = list(range(1, 13))
+
+    return render(request, 'planodenegocios/despesas.html', {
+        'despesas': despesas,
+        'total_mes': total_mes,
+        'total_geral': total_geral,
+        'mes_selecionado': mes,
+        'meses': meses,
+    })
+
+def cadastrar_despesa(request, mes=None):
+    if request.method == 'POST':
+        nome = request.POST.get('nome')
+        valor = request.POST.get('valor')
+        mes = mes or request.POST.get('mes')
+        DespesaAdministrativa.objects.create(nome=nome, valor=valor, mes=mes)
+        return redirect('despesas_mes', mes=mes)
+
+    return render(request, 'planodenegocios/cadastrar_despesa.html', {
+        'mes': mes,
+    })
+
+def editar_despesa(request, id, mes=None):
+    despesa = get_object_or_404(DespesaAdministrativa, id=id)
+
+    if request.method == 'POST':
+        nome = request.POST.get('nome', '').strip()
+        valor = request.POST.get('valor', '').strip()
+        mes_post = request.POST.get('mes')  # Pega o mês enviado no form
+
+        if not nome or not valor:
+            messages.error(request, "Preencha todos os campos.")
+            return redirect('editar_despesa', id=id, mes=mes_post or mes)
+
+        try:
+            valor_float = float(valor)
+            despesa.nome = nome
+            despesa.valor = valor_float
+            despesa.save()
+            messages.success(request, "Despesa atualizada com sucesso!")
+            # Redireciona para a página do mês enviado no form (POST)
+            return redirect('despesas_mes', mes=mes_post or mes)
+        except ValueError:
+            messages.error(request, "Valor inválido.")
+            return redirect('editar_despesa', id=id, mes=mes_post or mes)
+
+    # GET request: usa o mes recebido pela URL ou o mês da despesa
+    return render(request, 'planodenegocios/editar_despesa.html', {
+        'despesa': despesa,
+        'mes': mes or despesa.mes,
+    })
+
+def excluir_despesa(request, mes, id):
+    despesa = get_object_or_404(DespesaAdministrativa, id=id)
+    despesa.delete()
+    return redirect('despesas_mes', mes=mes)
+
+#Crédito tributário de despesas administrativas
+
+def credito_tributario_view(request):
+    despesas = DespesaAdministrativa.objects.all()
+    # Carrega todos os créditos já cadastrados em um dicionário para lookup rápido
+    creditos = {c.despesa_id: c for c in CreditoTributario.objects.all()}
+
+    if request.method == 'POST':
+        for despesa in despesas:
+            aliquota_str = request.POST.get(f'aliquota_{despesa.id}', '').strip()
+            try:
+                aliquota = Decimal(aliquota_str) if aliquota_str else Decimal('0')
+            except:
+                aliquota = Decimal('0')
+
+            if aliquota > 0:
+                # Atualiza ou cria apenas para a despesa em questão
+                if despesa.id in creditos:
+                    credito = creditos[despesa.id]
+                    credito.aliquota = aliquota
+                    credito.save()
+                else:
+                    CreditoTributario.objects.create(despesa=despesa, aliquota=aliquota)
+            else:
+                # NÃO altera nada se o valor é 0 (mantém o que já tinha no banco)
+                pass
+
+        return redirect('credito_tributario')  # use o nome correto da URL
+
+    # Prepara os dados para o formulário
+    despesas_com_creditos = []
+    for despesa in despesas:
+        aliquota = creditos[despesa.id].aliquota if despesa.id in creditos else Decimal('0.00')
+        despesas_com_creditos.append({'despesa': despesa, 'aliquota': aliquota})
+
+    # Prepara o resumo
+    lista_calculos = []
+    for credito in CreditoTributario.objects.select_related('despesa'):
+        valor_credito = (credito.despesa.valor * credito.aliquota) / Decimal('100.00')
+        lista_calculos.append({
+            'nome': credito.despesa.nome,
+            'valor_despesa': credito.despesa.valor,
+            'aliquota': credito.aliquota,
+            'valor_credito': valor_credito,
+        })
+
+    return render(request, 'planodenegocios/credito_tributario.html', {
+        'despesas_com_creditos': despesas_com_creditos,
+        'lista_calculos': lista_calculos,
+    })

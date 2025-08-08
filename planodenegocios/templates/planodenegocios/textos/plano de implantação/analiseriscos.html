@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block conteudo %}
+<div class="content d-flex flex-column">
+  <h3>Análise de Riscos</h3>
+
+  <form method="post">
+    {% csrf_token %}
+    <div class="editor-area" contenteditable="true" id="editor-riscos" placeholder="Digite aqui a análise de riscos...">
+      {{ analise.texto|safe }}
+    </div>
+
+    <textarea name="texto" id="texto" hidden></textarea>
+
+    <button type="submit" class="btn btn-success d-flex align-items-center gap-1">
+      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="18" fill="currentColor" class="bi bi-floppy" viewBox="0 0 16 16">
+        <path d="M11 2H9v3h2z"/>
+        <path d="M1.5 0h11.586a1.5 1.5 0 0 1 1.06.44l1.415 1.414A1.5 1.5 0 0 1 16 2.914V14.5a1.5 1.5 0 0 1-1.5 1.5h-13A1.5 1.5 0 0 1 0 14.5v-13A1.5 1.5 0 0 1 1.5 0M1 1.5v13a.5.5 0 0 0 .5.5H2v-4.5A1.5 1.5 0 0 1 3.5 9h9a1.5 1.5 0 0 1 1.5 1.5V15h.5a.5.5 0 0 0 .5-.5V2.914a.5.5 0 0 0-.146-.353l-1.415-1.415A.5.5 0 0 0 13.086 1H13v4.5A1.5 1.5 0 0 1 11.5 7h-7A1.5 1.5 0 0 1 3 5.5V1H1.5a.5.5 0 0 0-.5.5m3 4a.5.5 0 0 0 .5.5h7a.5.5 0 0 0 .5-.5V1H4zM3 15h10v-4.5a.5.5 0 0 0-.5-.5h-9a.5.5 0 0 0-.5.5z"/>
+      </svg>
+      Salvar
+    </button>
+
+  </form>
+
+  <div class="footer-notes mt-4">
+    <strong>Suporte á edição - Orientação</strong> <br>
+    <p>Quais ameaças podem atrapalhar o desenvolvimento e comercialização dos produtos/serviços?</p>
+    <p>Quais os pontos fracos do seu negócio? Como eles podem afetar a sua empresa e impedir o aproveitamento da oportunidade?</p> 
+    <p>Existe alguma característica nos hábitos do público-alvo que pode inibir o desenvolvimento ou a comercialização do serviço ou produto?</p>
+    <p>Há características na economia da cidade, do estado ou do país onde vai atuar que podem auxiliar ou atrapalhar o desenvolvimento e a comercialização dos produtos/serviços?</p>
+    <p>Mudanças políticas ou econômicas podem interferir nos planos? Como?</p> 
+    <p>O desenvolvimento e a comercialização dos produtos/serviços podem ser afetados pelo poder público, seja ele municipal, estadual ou federal?</p>
+    <p>Há alguma característica tecnológica do serviço ou produto (bem como na concorrência) que pode auxiliar ou inibir o desenvolvimento e o plano de comercialização?</p>
+    <p>Pode haver mudanças tecnológicas significativas no mercado nos próximos anos?</p>
+    <p>Como está o desenvolvimento tecnológico em mercados semelhantes nos países mais expressivos?</p>
+    <p>A comunidade está desenvolvida o suficiente para gerar demanda pelo serviço e produto?</p>
+    <p>Os meios de informação utilizados pela empresa conseguem se comunicar com seu público?</p>
+    <p>A concorrência possui alguma vantagem competitiva ou domina algum mecanismo que influencia todo o mercado?</p>
+    <p>Se a tecnologia não é da empresa e o produto/serviço depende dessa tecnologia, como ela está preparada para diminuir ou eliminar a dependência em relação a terceiros?</p>
+  </div>
+</div>
+{% endblock conteudo %}
+
+{% block extra_js %}
+<script src="{% static 'js/sidebar.js' %}"></script>
+<script src="{% static 'js/textos-js/exibir-riscos.js' %}"></script>
+{% endblock extra_js %}
