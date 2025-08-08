@@ -310,3 +310,46 @@ a{
   .tab-content {
     transition: opacity 0.3s ease;
   }
+
+  /* ===== RECEITAS (visual planilha) ===== */
+.tabela-receitas {
+  border-collapse: collapse;
+  border: 1px solid #8f8f8f;
+  background: #fff;
+  font-size: 0.9rem;
+  width: 100%;
+}
+
+.tabela-receitas th,
+.tabela-receitas td {
+  border: 1px solid #8f8f8f;
+  padding: 6px 8px;
+}
+
+.tabela-receitas thead th {
+  background: #d9d9d9;
+  color: #000;
+  font-weight: 600;
+  text-align: center;
+}
+
+.tabela-receitas tbody tr:nth-child(even) td {
+  background: #f6f6f6;
+}
+
+.tabela-receitas .linha-secao td {
+  background: #d9d9d9;
+  font-weight: 600;
+}
+
+.input-qty {
+  max-width: 140px;
+  margin-left: auto;
+}
+
+.quadro-explicativo {
+  color: #666;
+  font-size: 0.92rem;
+  line-height: 1.35;
+}
+

@@ -1,4 +1,7 @@
 from django.db import models
+from decimal import Decimal
+from django.db import models
+from django.core.validators import MinValueValidator
 
 class Investimento(models.Model):
     data = models.DateField(null=True, blank=True)
@@ -308,3 +311,67 @@ class AlternativasEstrategicas(models.Model):
 
     def __str__(self):
         return f"Alternativas Estratégicas ({self.atualizado_em:%d/%m/%Y %H:%M})"
+
+
+
+# TELA RECEITAS
+class ReceitaOperacional(models.Model):
+    """
+    Quantidade projetada de venda no mês 1 para cada Produto/Serviço.
+    """
+    item = models.ForeignKey(
+        'planodenegocios.ProdutoServico',
+        on_delete=models.CASCADE,
+        related_name='receitas'
+    )
+    mes_referencia = models.PositiveSmallIntegerField(default=1)  # mês 1 (igual à planilha)
+    quantidade_inicial = models.DecimalField(
+        max_digits=12, decimal_places=2,
+        validators=[MinValueValidator(Decimal('0'))],
+        default=0
+    )
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=['item', 'mes_referencia'],
+                name='uniq_receita_item_mes'
+            )
+        ]
+        verbose_name = 'Receita operacional'
+        verbose_name_plural = 'Receitas operacionais'
+
+    def __str__(self):
+        return f'{self.item.nome} (mês {self.mes_referencia})'
+
+    @property
+    def unidade(self):
+        # vem direto do ProdutoServico
+        return self.item.unidade_venda
+
+    @property
+    def faturamento_inicial(self):
+        # quantidade * preço de venda cadastrado no ProdutoServico
+        preco = self.item.preco_venda or 0
+        qtd = self.quantidade_inicial or 0
+        return qtd * preco
+
+
+class ReceitaNaoOperacional(models.Model):
+    """
+    Valor global para 'Outras receitas' do mês 1.
+    """
+    descricao = models.CharField(max_length=120, default='Outras receitas')
+    mes_referencia = models.PositiveSmallIntegerField(default=1)
+    valor_inicial = models.DecimalField(
+        max_digits=12, decimal_places=2,
+        validators=[MinValueValidator(Decimal('0'))],
+        default=0
+    )
+
+    class Meta:
+        verbose_name = 'Receita não operacional'
+        verbose_name_plural = 'Receitas não operacionais'
+
+    def __str__(self):
+        return f'{self.descricao} (mês {self.mes_referencia})'
