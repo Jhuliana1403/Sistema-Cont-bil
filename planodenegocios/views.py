@@ -501,12 +501,55 @@ def equipe_propria(request):
         'totais_geral': totais_geral,
     })
 
+#Prestadores de Serviço
+def terceiros(request):
+    if request.method == "POST":
+        nome = request.POST.get('nome', '').strip()
+        quantidade = request.POST.get('quantidade', '0').strip()
+        remuneracao = request.POST.get('remuneracao', '0').replace(',', '.').strip()
+
+        if nome and quantidade.isdigit() and remuneracao:
+            try:
+                qtd_int = int(quantidade)
+                rem_dec = float(remuneracao)
+                if qtd_int > 0 and rem_dec >= 0:
+                    Terceiro.objects.create(
+                        nome=nome,
+                        quantidade=qtd_int,
+                        remuneracao=rem_dec,
+                    )
+                    return redirect('terceiros')
+            except ValueError:
+                pass
+
+    terceiros = Terceiro.objects.all().order_by('nome')
+
+    total_contratos = sum(t.quantidade for t in terceiros)
+    soma_remuneracoes = sum(t.valor_inicial for t in terceiros)
+
+    return render(request, 'planodenegocios/terceiros.html', {
+        'terceiros': terceiros,
+        'total_contratos': total_contratos,
+        'soma_remuneracoes': soma_remuneracoes,
+    })
+
+
+def excluir_terceiro(request, pk):
+    terceiro = get_object_or_404(Terceiro, pk=pk)
+    terceiro.delete()
+    return redirect('terceiros')
+
+
+def excluir_todos_terceiros(request):
+    Terceiro.objects.all().delete()
+    return redirect('terceiros') 
+
 #Produtos e Serviços
 def produto(request):
-    produtos = ProdutoServico.objects.all()  # Corrigido o nome da variável e da classe
+    produtos = ProdutoServico.objects.all()  
 
     return render(request, "planodenegocios/produto.html", {
-        'produtos': produtos  # Também corrigido o nome passado para o template
+        'produtos': produtos  
     })
 
 def cadastrar_produto(request):
