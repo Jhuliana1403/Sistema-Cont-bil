@@ -1,15 +1,21 @@
 # Importa as funções necessárias do Django para renderizar templates e redirecionar requisições
 from django.shortcuts import render, redirect, get_object_or_404
 
-from decimal import Decimal
-# Importa o modelo Investimento do arquivo models.py
-from .models import Investimento, CreditoTributario, AlternativasEstrategicas, Terceiro, Cronograma, FatoresCriticosSucesso, GestaoQualidade, Ampliacoes, ProdutoServico, CustoProducao, Funcionario, EncargoGlobal, DespesaAdministrativa, DespesaMensal, ResumoExecutivo, HistoricoMotivacao, ModeloNegocio, CaracteristicasBeneficios, EstagioDesenvolvimento, AnaliseSetor, MercadoPotencial, AnaliseConcorrencia, Posicionamento, FocoSegmentacao, PlanoPenetracaoMercado, ProdutosServicosInsumos, DescricaoLegalEstruturaSocietaria, Equipe, TerceirizacaoEquipeApoio, DistribuicaoComercializacao, AliancasParcerias, PesquisaDesenvolvimentoInovacao, AnaliseRiscos
+from decimal import Decimal, InvalidOperation
+
+from .models import Investimento, CreditoTributario, AlternativasEstrategicas, Cronograma, FatoresCriticosSucesso, GestaoQualidade, Ampliacoes, ProdutoServico, CustoProducao
+from .models import Funcionario, EncargoGlobal, DespesaAdministrativa, DespesaMensal, ResumoExecutivo, HistoricoMotivacao, ModeloNegocio, CaracteristicasBeneficios, EstagioDesenvolvimento
+from .models import AnaliseSetor, MercadoPotencial, AnaliseConcorrencia, Posicionamento, FocoSegmentacao, PlanoPenetracaoMercado, ProdutosServicosInsumos, DescricaoLegalEstruturaSocietaria
+from .models import Equipe,Terceiro, TerceirizacaoEquipeApoio, DistribuicaoComercializacao, AliancasParcerias, PesquisaDesenvolvimentoInovacao, AnaliseRiscos
+from .models import ReceitaOperacional, ReceitaNaoOperacional, ProdutoServico, ImpostoLucro, ImpostoVendaItem
 
 from django.contrib import messages
 
 from django.db.models import Sum
 
 from django.forms import modelformset_factory
+
+from django.db import transaction
 
 #Bibliotecas para a geração de pdf
 from io import BytesIO
@@ -23,7 +29,6 @@ from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.enums import TA_CENTER, TA_JUSTIFY
 from reportlab.lib.units import cm
 from reportlab.lib.colors import HexColor, gray
-
 
 # Resumo Executivo
 def index(request):
@@ -797,12 +802,37 @@ def visao_geral(request):
     for f in funcionarios:
         total_mensal = f.quantidade * f.salario_inicial
         funcionarios_data.append({
-            'nome': f.cargo,  # corrigido aqui
+            'nome': f.cargo,
             'quantidade': f.quantidade,
             'salario_inicial': f.salario_inicial,
             'total_mensal': total_mensal,
         })
 
+    # Receitas (adicionado)
+    itens = ProdutoServico.objects.only('id', 'nome', 'unidade_venda', 'preco_venda').order_by('nome')
+    outras, _ = ReceitaNaoOperacional.objects.get_or_create(mes_referencia=1, descricao='Outras receitas')
+
+    receitas_map = {
+        r.item_id: r.quantidade_inicial
+        for r in ReceitaOperacional.objects.filter(mes_referencia=1, item__in=itens).only('item_id', 'quantidade_inicial')
+    }
+
+    total_faturamento = Decimal("0")
+    linhas_receitas = []
+    for p in itens:
+        qtd = receitas_map.get(p.id, Decimal("0"))
+        preco = p.preco_venda or Decimal("0")
+        total_faturamento += qtd * preco
+        linhas_receitas.append({
+            "id": p.id,
+            "nome": p.nome,
+            "unidade": p.unidade_venda,
+            "quantidade": qtd,
+            "preco_venda": preco,
+            "total": qtd * preco,
+        })
+
+    outras_receitas = outras.valor_inicial or Decimal("0")
 
     context = {
         'sections': sections,
@@ -820,6 +850,10 @@ def visao_geral(request):
         'total_despesas': sum(d.valor for d in DespesaAdministrativa.objects.all()),
         'creditos': CreditoTributario.objects.select_related('despesa').all(),
         'total_credito': sum(((c.despesa.valor * c.aliquota) / 100) for c in CreditoTributario.objects.select_related('despesa').all()),
+        # Dados de receitas incluídos aqui:
+        'linhas_receitas': linhas_receitas,
+        'total_faturamento': total_faturamento,
+        'outras_receitas': outras_receitas,
     }
 
     return render(request, 'planodenegocios/visao_geral.html', context)
@@ -885,12 +919,15 @@ def gerar_relatorio_pdf(request):
 
     def add_section(title, content):
         elementos.append(Paragraph(title, styles['Heading2Custom']))
-        elementos.append(Paragraph(content, styles['BodyTextCustom']))
+        if content:
+            elementos.append(Paragraph(content, styles['BodyTextCustom']))
 
     def add_subsection(title, content):
         elementos.append(Paragraph(title, styles['Heading3Custom']))
-        elementos.append(Paragraph(content, styles['BodyTextCustom']))
+        if content:
+            elementos.append(Paragraph(content, styles['BodyTextCustom']))
 
+    # --- Seções do Plano ---
     if resumo := ResumoExecutivo.objects.first():
         add_section("Resumo Executivo", resumo.texto)
 
@@ -900,13 +937,11 @@ def gerar_relatorio_pdf(request):
     if modelo := ModeloNegocio.objects.first():
         add_section("Modelo de Negócio", modelo.texto)
 
-    caracteristicas = CaracteristicasBeneficios.objects.first()
-    estagio = EstagioDesenvolvimento.objects.first()
-    if caracteristicas or estagio:
-        if caracteristicas:
-            add_section("Características e Benefícios", caracteristicas.texto)
-        if estagio:
-            add_section("Estágio de Desenvolvimento", estagio.texto)
+    if caracteristicas := CaracteristicasBeneficios.objects.first():
+        add_section("Características e Benefícios", caracteristicas.texto)
+
+    if estagio := EstagioDesenvolvimento.objects.first():
+        add_section("Estágio de Desenvolvimento", estagio.texto)
 
     if setor := AnaliseSetor.objects.first():
         add_section("Análise do Setor", setor.texto)
@@ -962,14 +997,47 @@ def gerar_relatorio_pdf(request):
     if alt := AlternativasEstrategicas.objects.first():
         add_section("Alternativas Estratégicas", alt.texto)
 
-    # Plano Financeiro - Investimentos
+    # --- Seção Receitas ---
+    itens = ProdutoServico.objects.only('id', 'nome', 'unidade_venda', 'preco_venda').order_by('nome')
+    outras, _ = ReceitaNaoOperacional.objects.get_or_create(mes_referencia=1, descricao='Outras receitas')
+
+    receitas_map = {
+        r.item_id: r.quantidade_inicial
+        for r in ReceitaOperacional.objects.filter(mes_referencia=1, item__in=itens).only('item_id', 'quantidade_inicial')
+    }
+
+    total_faturamento = Decimal("0")
+
+    if itens.exists() or (outras.valor_inicial and outras.valor_inicial > 0):
+        add_section("Receitas", "")
+
+        if itens.exists():
+            add_subsection("Receitas Operacionais", "")
+            for p in itens:
+                qtd = receitas_map.get(p.id, Decimal("0"))
+                preco = p.preco_venda or Decimal("0")
+                total_item = qtd * preco
+                total_faturamento += total_item
+                elementos.append(Paragraph(
+                    f"<b>{p.nome}</b> - Quantidade: {qtd:.2f} {p.unidade_venda or ''} - "
+                    f"Preço Unitário: R$ {preco:,.2f} - Total: R$ {total_item:,.2f}",
+                    styles['BodyTextCustom']
+                ))
+
+        if outras.valor_inicial and outras.valor_inicial > 0:
+            elementos.append(Paragraph(
+                f"<b>Outras Receitas Não Operacionais:</b> R$ {outras.valor_inicial:,.2f}",
+                styles['BodyTextCustom']
+            ))
+
+    # --- Plano Financeiro: Investimentos ---
     investimentos = Investimento.objects.all()
     if investimentos.exists():
         total = sum(item.total for item in investimentos)
-        add_section("Plano Financeiro", "")  # título principal, conteúdo vazio
+        add_section("Plano Financeiro", "")
         add_section("Investimentos", f"Total investido: R$ {total:,.2f}")
 
-    # Prestadores de Serviço
+    # --- Prestadores de Serviços ---
     terceiros = Terceiro.objects.all()
     if terceiros.exists():
         total_remuneracoes = sum(t.valor_inicial for t in terceiros)
@@ -977,7 +1045,7 @@ def gerar_relatorio_pdf(request):
         add_section("Prestadores de Serviços", 
                     f"Total de Terceiros: {total_terceiros}\nValor Total Inicial: R$ {total_remuneracoes:,.2f}")
 
-    # Equipe Própria
+    # --- Equipe Própria ---
     funcionarios = Funcionario.objects.all()
     if funcionarios.exists():
         total_funcionarios = sum(f.quantidade for f in funcionarios)
@@ -985,7 +1053,7 @@ def gerar_relatorio_pdf(request):
         add_section("Equipe Própria", 
                     f"Total de Funcionários: {total_funcionarios}\nTotal de Salários Mensais: R$ {total_salarios:,.2f}")
 
-    # Produtos e Serviços Detalhados
+    # --- Produtos e Serviços detalhados ---
     produtos = ProdutoServico.objects.all()
     if produtos.exists():
         add_section("Produtos e Serviços", "")
@@ -1003,7 +1071,7 @@ def gerar_relatorio_pdf(request):
                     f"<b>Frete:</b> R$ {custo.frete:,.2f} | <b>Embalagem:</b> {custo.embalagem or 'N/A'}",
                     styles['BodyTextCustom']))
 
-    # Despesas Administrativas
+    # --- Despesas Administrativas ---
     despesas = DespesaAdministrativa.objects.all()
     if despesas.exists():
         total_despesas = sum(d.valor for d in despesas)
@@ -1012,7 +1080,7 @@ def gerar_relatorio_pdf(request):
             elementos.append(Paragraph(f"{d.nome} (Mês {d.mes}) - R$ {d.valor:,.2f}", styles['BodyTextCustom']))
         elementos.append(Paragraph(f"Total Geral: R$ {total_despesas:,.2f}", styles['BodyTextCustom']))
 
-    # Créditos Tributários
+    # --- Créditos Tributários ---
     creditos = CreditoTributario.objects.select_related('despesa').all()
     if creditos.exists():
         total_credito = Decimal('0')
@@ -1024,7 +1092,232 @@ def gerar_relatorio_pdf(request):
                 f"{c.despesa.nome} - Alíquota: {c.aliquota}% | Crédito: R$ {valor_credito:,.2f}", styles['BodyTextCustom']))
         elementos.append(Paragraph(f"Total de Créditos: R$ {total_credito:,.2f}", styles['BodyTextCustom']))
 
+     # --- Seção Impostos ---
+    lucro = ImpostoLucro.objects.first()
+    impostos_venda = ImpostoVendaItem.objects.select_related('item').all().order_by('item__nome')
 
+    if lucro or impostos_venda.exists():
+        add_section("Impostos", "")
+        
+        if lucro:
+            elementos.append(Paragraph("<b>Alíquotas do Imposto sobre Lucro (%) por Ano:</b>", styles['BodyTextCustom']))
+            anos = [
+                lucro.aliquota_ano1 or Decimal('0'),
+                lucro.aliquota_ano2 or Decimal('0'),
+                lucro.aliquota_ano3 or Decimal('0'),
+                lucro.aliquota_ano4 or Decimal('0'),
+                lucro.aliquota_ano5 or Decimal('0'),
+            ]
+            texto_lucro = ", ".join(f"Ano {i+1}: {ano:.2f}%" for i, ano in enumerate(anos))
+            elementos.append(Paragraph(texto_lucro, styles['BodyTextCustom']))
+        
+        if impostos_venda.exists():
+            elementos.append(Paragraph("<b>Alíquotas de Imposto sobre Vendas por Produto/Serviço (%):</b>", styles['BodyTextCustom']))
+            for imp in impostos_venda:
+                anos = [
+                    imp.aliquota_ano1 or Decimal('0'),
+                    imp.aliquota_ano2 or Decimal('0'),
+                    imp.aliquota_ano3 or Decimal('0'),
+                    imp.aliquota_ano4 or Decimal('0'),
+                    imp.aliquota_ano5 or Decimal('0'),
+                ]
+                texto_item = f"{imp.item.nome}: " + ", ".join(f"Ano {i+1}: {ano:.2f}%" for i, ano in enumerate(anos))
+                elementos.append(Paragraph(texto_item, styles['BodyTextCustom']))
+
+    # Construção do PDF com watermark
     doc.build(elementos, canvasmaker=lambda *args, **kwargs: WatermarkCanvas(*args, logo_path=logo_path, **kwargs))
     buffer.seek(0)
     return FileResponse(buffer, as_attachment=True, filename='plano_de_negocios.pdf')
+
+
+#RECEITAS
+def _to_decimal(raw: str) -> Decimal:
+    if raw is None:
+        return Decimal("0")
+    raw = raw.strip().replace(",", ".")
+    if raw == "":
+        return Decimal("0")
+    try:
+        return Decimal(raw)
+    except InvalidOperation:
+        return Decimal("0")
+
+def receitas(request):
+    itens = (ProdutoServico.objects
+            .only('id', 'nome', 'unidade_venda', 'preco_venda')
+            .order_by('nome'))
+
+    # sempre busque do banco (nada de cache local antes do POST)
+    outras, _ = ReceitaNaoOperacional.objects.get_or_create(
+        mes_referencia=1, descricao='Outras receitas'
+    )
+
+    if request.method == 'POST':
+        try:
+            with transaction.atomic():
+                # salva cada produto/serviço de forma idempotente
+                for p in itens:
+                    qtd = _to_decimal(request.POST.get(f"q_{p.id}"))
+                    rec, _ = ReceitaOperacional.objects.get_or_create(
+                        item=p, mes_referencia=1
+                    )
+                    rec.quantidade_inicial = qtd
+                    rec.save()
+
+                # salva "outras receitas"
+                outras.valor_inicial = _to_decimal(request.POST.get("outras_receitas"))
+                outras.save()
+
+            messages.success(request, "Receitas salvas com sucesso!")
+            return redirect('receitas')  # novo GET, garantindo leitura fresca do BD
+
+        except Exception as e:
+            messages.error(request, f"Erro ao salvar: {e}")
+
+    # GET (ou pós-redirect): sempre leia do BD atualizado
+    receitas_map = {
+        r.item_id: r.quantidade_inicial
+        for r in ReceitaOperacional.objects
+            .filter(mes_referencia=1, item__in=itens)
+            .only('item_id', 'quantidade_inicial')
+    }
+
+    total_faturamento = Decimal("0")
+    linhas = []
+    for p in itens:
+        qtd = receitas_map.get(p.id, Decimal("0"))
+        preco = p.preco_venda or Decimal("0")
+        total_faturamento += qtd * preco
+
+        # string já no formato aceito por <input type="number"> (ponto, sem locale)
+        qtd_str = f"{qtd:.2f}".replace(",", ".")  # Decimal já usa ponto, mas garantimos
+
+        linhas.append({
+            "id": p.id,
+            "nome": p.nome,
+            "unidade": p.unidade_venda,
+            "quantidade": qtd,        # fica pra cálculos, se precisar
+            "quantidade_str": qtd_str # vai direto no value do input
+        })
+
+    outras_str = f"{(outras.valor_inicial or Decimal('0')):.2f}"
+
+    contexto = {
+        "linhas": linhas,
+        "total_faturamento": total_faturamento,
+        "outras_receitas": outras.valor_inicial or Decimal("0"),
+        "outras_receitas_str": outras_str,
+    }
+    return render(request, 'planodenegocios/receitas.html', contexto)
+
+
+#IMPOSTOS
+def _to_pct(raw: str) -> Decimal:
+    if raw is None:
+        return Decimal("0")
+    raw = raw.strip().replace(",", ".").replace("%", "")
+    if raw == "":
+        return Decimal("0")
+    try:
+        v = Decimal(raw)
+    except InvalidOperation:
+        return Decimal("0")
+    # clamp 0..100
+    return max(Decimal("0"), min(v, Decimal("100")))
+
+def impostos(request):
+    # ----- itens base (produtos/serviços/insumos) -----
+    itens = (ProdutoServico.objects
+             .only('id', 'nome')
+             .order_by('nome'))
+
+    # garantir 1 registro ImpostoLucro e 1 por item
+    lucro, _ = ImpostoLucro.objects.get_or_create(id=1)
+
+    existentes = {ivi.item_id: ivi for ivi in ImpostoVendaItem.objects.select_related('item')}
+    novos = [ImpostoVendaItem(item=p) for p in itens if p.id not in existentes]
+    if novos:
+        ImpostoVendaItem.objects.bulk_create(novos)
+        existentes = {ivi.item_id: ivi for ivi in ImpostoVendaItem.objects.select_related('item')}
+
+    # ----- modo (const/var) persistido) -----
+    if request.method == 'POST':
+        modo = request.POST.get('modo') or request.session.get('impostos_modo', 'const')
+    else:
+        modo = request.session.get('impostos_modo', 'const')
+
+    if request.method == 'POST':
+        try:
+            with transaction.atomic():
+                # Lucro
+                if modo == 'const':
+                    base = _to_pct(request.POST.get('pl_1'))
+                    lucro.aliquota_ano1 = lucro.aliquota_ano2 = lucro.aliquota_ano3 = lucro.aliquota_ano4 = lucro.aliquota_ano5 = base
+                else:
+                    lucro.aliquota_ano1 = _to_pct(request.POST.get('pl_1'))
+                    lucro.aliquota_ano2 = _to_pct(request.POST.get('pl_2'))
+                    lucro.aliquota_ano3 = _to_pct(request.POST.get('pl_3'))
+                    lucro.aliquota_ano4 = _to_pct(request.POST.get('pl_4'))
+                    lucro.aliquota_ano5 = _to_pct(request.POST.get('pl_5'))
+                lucro.save()
+
+                # Vendas por item
+                to_update = []
+                for p in itens:
+                    imp = existentes[p.id]
+                    if modo == 'const':
+                        base = _to_pct(request.POST.get(f'pv_{p.id}_1'))
+                        imp.aliquota_ano1 = imp.aliquota_ano2 = imp.aliquota_ano3 = imp.aliquota_ano4 = imp.aliquota_ano5 = base
+                    else:
+                        imp.aliquota_ano1 = _to_pct(request.POST.get(f'pv_{p.id}_1'))
+                        imp.aliquota_ano2 = _to_pct(request.POST.get(f'pv_{p.id}_2'))
+                        imp.aliquota_ano3 = _to_pct(request.POST.get(f'pv_{p.id}_3'))
+                        imp.aliquota_ano4 = _to_pct(request.POST.get(f'pv_{p.id}_4'))
+                        imp.aliquota_ano5 = _to_pct(request.POST.get(f'pv_{p.id}_5'))
+                    to_update.append(imp)
+
+                ImpostoVendaItem.objects.bulk_update(
+                    to_update,
+                    ['aliquota_ano1', 'aliquota_ano2', 'aliquota_ano3', 'aliquota_ano4', 'aliquota_ano5']
+                )
+
+            # guarda o modo na sessão
+            request.session['impostos_modo'] = modo
+
+            messages.success(request, "Impostos salvos com sucesso!")
+            return redirect('impostos')  # PRG: novo GET vai ler do BD e preencher os campos
+
+        except Exception as e:
+            messages.error(request, f"Erro ao salvar: {e}")
+            # cai pro GET abaixo para renderizar com o que está no BD
+
+    # ----- GET (ou após redirect): montar contexto a partir do BD -----
+    lucro_cols = []
+    for ano, v in enumerate([
+        lucro.aliquota_ano1, lucro.aliquota_ano2, lucro.aliquota_ano3,
+        lucro.aliquota_ano4, lucro.aliquota_ano5
+    ], start=1):
+        v = v or Decimal("0")
+        lucro_cols.append({"ano": ano, "valor": v, "valor_str": f"{v:.2f}"})
+
+    linhas = []
+    for p in itens:
+        imp = existentes[p.id]
+        valores = [
+            imp.aliquota_ano1 or Decimal("0"),
+            imp.aliquota_ano2 or Decimal("0"),
+            imp.aliquota_ano3 or Decimal("0"),
+            imp.aliquota_ano4 or Decimal("0"),
+            imp.aliquota_ano5 or Decimal("0"),
+        ]
+        cols = []
+        for ano, v in enumerate(valores, start=1):
+            cols.append({"ano": ano, "valor": v, "valor_str": f"{v:.2f}"})
+        linhas.append({"id": p.id, "nome": p.nome, "cols": cols})
+
+    contexto = {
+        "modo": modo,
+        "lucro_cols": lucro_cols,
+        "linhas": linhas,
+    }
+    return render(request, 'planodenegocios/impostos.html', contexto)

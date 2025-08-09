@@ -65,6 +65,13 @@ urlpatterns = [
 
     #Visão Geral
     path('relatório_geral/', views.visao_geral, name='relatorio_geral'),
+
     #Relatório de PDF's
     path('relatorio/pdf/', views.gerar_relatorio_pdf, name='relatorio_pdf'), 
+
+    #despesas
+    path('receitas/', views.receitas, name='receitas'),
+
+    #impostos
+    path('impostos/', views.impostos, name='impostos')
 ]

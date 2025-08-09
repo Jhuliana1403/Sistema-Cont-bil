@@ -180,6 +180,39 @@
       </section>
     {% endif %}
 
+    {% if linhas_receitas %}
+    <section class="mb-5">
+      <h2 class="h4 fw-semibold border-bottom pb-2 title-primary-color">Receitas</h2>
+      <div class="table-responsive">
+        <table class="table-report">
+          <thead>
+            <tr>
+              <th>Nome</th>
+              <th>Unidade</th>
+              <th>Quantidade</th>
+              <th>Preço de Venda</th>
+              <th>Total</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for r in linhas_receitas %}
+            <tr>
+              <td>{{ r.nome }}</td>
+              <td>{{ r.unidade }}</td>
+              <td>{{ r.quantidade|floatformat:2 }}</td>
+              <td>R$ {{ r.preco_venda|floatformat:2 }}</td>
+              <td>R$ {{ r.total|floatformat:2 }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      <p class="mt-3 fw-bold">Outras Receitas: R$ {{ outras_receitas|floatformat:2 }}</p>
+      <p class="fw-bold">Total de Faturamento: R$ {{ total_faturamento|floatformat:2 }}</p>
+    </section>
+    {% endif %}
+
+
   </div>
 </div>
 {% endblock conteudo %}
