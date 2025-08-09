@@ -45,6 +45,12 @@ urlpatterns = [
     # Equipe própia
     path('equipe-propria/', views.equipe_propria, name='equipe_propria'),
 
+    #Prestadores de Serviço
+    path('terceiros/', views.terceiros, name='terceiros'),
+    path('terceiros/excluir/<int:pk>/', views.excluir_terceiro, name='excluir_terceiro'),
+    path('terceiros/excluir-todos/', views.excluir_todos_terceiros, name='excluir_todos_terceiros'),
+
+
     #Produtos e Serviços
     path('cadastrar_produtoservicos/', views.cadastrar_produto, name='cadastrar_produto'),
     path('produtoservicos/', views.produto, name='produto'),

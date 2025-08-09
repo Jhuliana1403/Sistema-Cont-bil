@@ -27,9 +27,9 @@
         <p class="text-muted text-center mb-4">Modelo de Receitas do Produtos/Serviços</p>
         <strong class="text-muted text-center mb-4">Características do produto/serviço, preço de comercialização e custos envolvidos</strong>
 
-        <form method="POST" id="form-investimento">
+        <form method="POST" id="form-produto">
           {% csrf_token %}
-          <input type="hidden" name="form-investimento" value="1">
+          <input type="hidden" name="form-produto" value="1">
           <div class="table-responsive rounded">
             <table class="table table-hover table-bordered align-middle text-center shadow-sm bg-white rounded" id="tabela-investimentos">
               <thead class="table-primary text-dark">

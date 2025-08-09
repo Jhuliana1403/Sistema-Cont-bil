@@ -248,6 +248,15 @@ class Equipe(models.Model):
     def __str__(self):
         return f"Equipe ({self.atualizado_em:%d/%m/%Y %H:%M})"
 
+class Terceiro(models.Model):
+    nome = models.CharField(max_length=100)
+    quantidade = models.PositiveIntegerField()
+    remuneracao = models.DecimalField(max_digits=10, decimal_places=2)
+
+    @property
+    def valor_inicial(self):
+        return self.quantidade * self.remuneracao
+
 class TerceirizacaoEquipeApoio(models.Model):
     texto = models.TextField("Terceirização e Equipe de Apoio Externo")
     criado_em = models.DateTimeField(auto_now_add=True)
