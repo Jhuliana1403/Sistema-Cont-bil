@@ -66,4 +66,7 @@ urlpatterns = [
     #despesas
     path('receitas/', views.receitas, name='receitas'),
 
+    #impostoso
+    path('impostos/', views.impostos, name='impostos')
+
 ]

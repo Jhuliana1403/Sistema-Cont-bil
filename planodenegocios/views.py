@@ -7,7 +7,7 @@ from .models import Investimento, CreditoTributario, AlternativasEstrategicas, C
 from .models import Funcionario, EncargoGlobal, DespesaAdministrativa, DespesaMensal, ResumoExecutivo, HistoricoMotivacao, ModeloNegocio, CaracteristicasBeneficios, EstagioDesenvolvimento
 from .models import AnaliseSetor, MercadoPotencial, AnaliseConcorrencia, Posicionamento, FocoSegmentacao, PlanoPenetracaoMercado, ProdutosServicosInsumos, DescricaoLegalEstruturaSocietaria
 from .models import Equipe, TerceirizacaoEquipeApoio, DistribuicaoComercializacao, AliancasParcerias, PesquisaDesenvolvimentoInovacao, AnaliseRiscos
-from .models import ProdutoServico, ReceitaOperacional, ReceitaNaoOperacional
+from .models import ReceitaOperacional, ReceitaNaoOperacional, ProdutoServico, ImpostoLucro, ImpostoVendaItem
 
 from django.contrib import messages
 
@@ -814,3 +814,114 @@ def receitas(request):
     }
     return render(request, 'planodenegocios/receitas.html', contexto)
 
+
+#IMPOSTOS
+def _to_pct(raw: str) -> Decimal:
+    if raw is None:
+        return Decimal("0")
+    raw = raw.strip().replace(",", ".").replace("%", "")
+    if raw == "":
+        return Decimal("0")
+    try:
+        v = Decimal(raw)
+    except InvalidOperation:
+        return Decimal("0")
+    # clamp 0..100
+    return max(Decimal("0"), min(v, Decimal("100")))
+
+def impostos(request):
+    # ----- itens base (produtos/serviços/insumos) -----
+    itens = (ProdutoServico.objects
+             .only('id', 'nome')
+             .order_by('nome'))
+
+    # garantir 1 registro ImpostoLucro e 1 por item
+    lucro, _ = ImpostoLucro.objects.get_or_create(id=1)
+
+    existentes = {ivi.item_id: ivi for ivi in ImpostoVendaItem.objects.select_related('item')}
+    novos = [ImpostoVendaItem(item=p) for p in itens if p.id not in existentes]
+    if novos:
+        ImpostoVendaItem.objects.bulk_create(novos)
+        existentes = {ivi.item_id: ivi for ivi in ImpostoVendaItem.objects.select_related('item')}
+
+    # ----- modo (const/var) persistido) -----
+    if request.method == 'POST':
+        modo = request.POST.get('modo') or request.session.get('impostos_modo', 'const')
+    else:
+        modo = request.session.get('impostos_modo', 'const')
+
+    if request.method == 'POST':
+        try:
+            with transaction.atomic():
+                # Lucro
+                if modo == 'const':
+                    base = _to_pct(request.POST.get('pl_1'))
+                    lucro.aliquota_ano1 = lucro.aliquota_ano2 = lucro.aliquota_ano3 = lucro.aliquota_ano4 = lucro.aliquota_ano5 = base
+                else:
+                    lucro.aliquota_ano1 = _to_pct(request.POST.get('pl_1'))
+                    lucro.aliquota_ano2 = _to_pct(request.POST.get('pl_2'))
+                    lucro.aliquota_ano3 = _to_pct(request.POST.get('pl_3'))
+                    lucro.aliquota_ano4 = _to_pct(request.POST.get('pl_4'))
+                    lucro.aliquota_ano5 = _to_pct(request.POST.get('pl_5'))
+                lucro.save()
+
+                # Vendas por item
+                to_update = []
+                for p in itens:
+                    imp = existentes[p.id]
+                    if modo == 'const':
+                        base = _to_pct(request.POST.get(f'pv_{p.id}_1'))
+                        imp.aliquota_ano1 = imp.aliquota_ano2 = imp.aliquota_ano3 = imp.aliquota_ano4 = imp.aliquota_ano5 = base
+                    else:
+                        imp.aliquota_ano1 = _to_pct(request.POST.get(f'pv_{p.id}_1'))
+                        imp.aliquota_ano2 = _to_pct(request.POST.get(f'pv_{p.id}_2'))
+                        imp.aliquota_ano3 = _to_pct(request.POST.get(f'pv_{p.id}_3'))
+                        imp.aliquota_ano4 = _to_pct(request.POST.get(f'pv_{p.id}_4'))
+                        imp.aliquota_ano5 = _to_pct(request.POST.get(f'pv_{p.id}_5'))
+                    to_update.append(imp)
+
+                ImpostoVendaItem.objects.bulk_update(
+                    to_update,
+                    ['aliquota_ano1', 'aliquota_ano2', 'aliquota_ano3', 'aliquota_ano4', 'aliquota_ano5']
+                )
+
+            # guarda o modo na sessão
+            request.session['impostos_modo'] = modo
+
+            messages.success(request, "Impostos salvos com sucesso!")
+            return redirect('impostos')  # PRG: novo GET vai ler do BD e preencher os campos
+
+        except Exception as e:
+            messages.error(request, f"Erro ao salvar: {e}")
+            # cai pro GET abaixo para renderizar com o que está no BD
+
+    # ----- GET (ou após redirect): montar contexto a partir do BD -----
+    lucro_cols = []
+    for ano, v in enumerate([
+        lucro.aliquota_ano1, lucro.aliquota_ano2, lucro.aliquota_ano3,
+        lucro.aliquota_ano4, lucro.aliquota_ano5
+    ], start=1):
+        v = v or Decimal("0")
+        lucro_cols.append({"ano": ano, "valor": v, "valor_str": f"{v:.2f}"})
+
+    linhas = []
+    for p in itens:
+        imp = existentes[p.id]
+        valores = [
+            imp.aliquota_ano1 or Decimal("0"),
+            imp.aliquota_ano2 or Decimal("0"),
+            imp.aliquota_ano3 or Decimal("0"),
+            imp.aliquota_ano4 or Decimal("0"),
+            imp.aliquota_ano5 or Decimal("0"),
+        ]
+        cols = []
+        for ano, v in enumerate(valores, start=1):
+            cols.append({"ano": ano, "valor": v, "valor_str": f"{v:.2f}"})
+        linhas.append({"id": p.id, "nome": p.nome, "cols": cols})
+
+    contexto = {
+        "modo": modo,
+        "lucro_cols": lucro_cols,
+        "linhas": linhas,
+    }
+    return render(request, 'planodenegocios/impostos.html', contexto)
