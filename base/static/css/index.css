@@ -310,3 +310,82 @@ a{
   .tab-content {
     transition: opacity 0.3s ease;
   }
+
+/* Visão geral */
+#relatorio {
+    color: #2c3e50; /* Cinza-azulado elegante */
+    font-size: 16px;
+    line-height: 1.6;
+}
+/* Cor do texto principal */
+.text-primary-color {
+  color: #2c3e50; /* Cinza-escuro elegante */
+}
+
+/* Container do relatório */
+.report-container {
+  background-color: #ffffff;
+  border: 1px solid #e0e0e0;
+  overflow-y: auto;
+  max-height: 75vh;
+  padding: 1rem 1.5rem;
+  box-shadow: 0 0 6px rgba(0,0,0,0.05);
+  border-radius: 8px;
+}
+
+/* Títulos principais */
+.title-primary-color {
+  color: #1a237e; /* Azul-profundo */
+}
+
+/* Parágrafos */
+.text-paragraph-color {
+  color: #34495e; /* Cinza-azulado suave */
+}
+
+/* Tabelas estilizadas */
+.table-report {
+  color: #2c3e50;
+  width: 100%;
+  border-collapse: collapse;
+  border: 1px solid #ddd;
+  font-size: 1rem;
+}
+
+.table-report thead {
+  background-color: #e3f2fd; /* Azul bem claro */
+  color: #0d47a1; /* Azul forte */
+}
+
+.table-report th, 
+.table-report td {
+  padding: 0.6rem 0.75rem;
+  border: 1px solid #ddd;
+  text-align: left;
+  vertical-align: middle;
+}
+
+.table-report tbody tr:hover {
+  background-color: #f1f8ff;
+}
+
+/* Lista de créditos */
+.list-group-item-report {
+  background-color: #fafafa;
+  color: #2c3e50;
+  padding: 0.5rem 1rem;
+  border: 1px solid #e0e0e0;
+  margin-bottom: 0.25rem;
+  border-radius: 4px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.list-group-item-report .badge {
+  font-size: 0.9rem;
+  background-color: #28a745;
+  color: white;
+  padding: 0.3em 0.6em;
+  border-radius: 9999px;
+}

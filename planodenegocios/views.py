@@ -11,6 +11,20 @@ from django.db.models import Sum
 
 from django.forms import modelformset_factory
 
+#Bibliotecas para a geração de pdf
+from io import BytesIO
+from django.http import FileResponse
+from django.contrib.staticfiles import finders
+
+from reportlab.lib.pagesizes import A4
+from reportlab.pdfgen import canvas
+from reportlab.platypus import (SimpleDocTemplate, Paragraph, Frame, PageTemplate)
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from reportlab.lib.enums import TA_CENTER, TA_JUSTIFY
+from reportlab.lib.units import cm
+from reportlab.lib.colors import HexColor, gray
+
+
 # Resumo Executivo
 def index(request):
     resumo, created = ResumoExecutivo.objects.get_or_create(id=1)
@@ -564,7 +578,6 @@ def cadastrar_produto(request):
         preco_venda_inserido = to_float(request.POST.get("preco_venda"))
         preco_venda_calculado = to_float(request.POST.get("precoVenda"))
         preco_compra = to_float(request.POST.get("precoCompra"))
-        preco_varia = bool(request.POST.get("preco_varia"))
 
         # Decidir qual preço_venda usar para salvar (exemplo: priorizar o inserido manualmente)
         preco_venda_final = preco_venda_inserido if preco_venda_inserido > 0 else preco_venda_calculado
@@ -583,7 +596,6 @@ def cadastrar_produto(request):
                 unidade_venda=unidade,
                 margem_lucro=markup or 0,
                 preco_venda=preco_venda_final,
-                preco_varia=preco_varia
             )
 
             if frete != "0" or embalagem or nova_materia_prima:
@@ -679,7 +691,6 @@ def excluir_despesa(request, mes, id):
     return redirect('despesas_mes', mes=mes)
 
 #Crédito tributário de despesas administrativas
-
 def credito_tributario_view(request):
     despesas = DespesaAdministrativa.objects.all()
     # Carrega todos os créditos já cadastrados em um dicionário para lookup rápido
@@ -728,3 +739,292 @@ def credito_tributario_view(request):
         'despesas_com_creditos': despesas_com_creditos,
         'lista_calculos': lista_calculos,
     })
+
+#Visão Geral
+def visao_geral(request):
+    resumo = ResumoExecutivo.objects.first()
+    historico = HistoricoMotivacao.objects.first()
+    modelo = ModeloNegocio.objects.first()
+    caracteristicas = CaracteristicasBeneficios.objects.first()
+    estagio = EstagioDesenvolvimento.objects.first()
+    setor = AnaliseSetor.objects.first()
+    mercado = MercadoPotencial.objects.first()
+    concorrencia = AnaliseConcorrencia.objects.first()
+    posicionamento = Posicionamento.objects.first()
+    foco = FocoSegmentacao.objects.first()
+    plano = PlanoPenetracaoMercado.objects.first()
+    distribuicao = DistribuicaoComercializacao.objects.first()
+    producao = ProdutosServicosInsumos.objects.first()
+    descricao = DescricaoLegalEstruturaSocietaria.objects.first()
+    equipe = Posicionamento.objects.first()
+    terceirizacao = TerceirizacaoEquipeApoio.objects.first()
+    alianca = AliancasParcerias.objects.first()
+    pesquisa = PesquisaDesenvolvimentoInovacao.objects.first()
+    qualidade = GestaoQualidade.objects.first()
+    risco = AnaliseRiscos.objects.first()
+    fatores = FatoresCriticosSucesso.objects.first()
+    cronograma = Cronograma.objects.first()
+    alt = AlternativasEstrategicas.objects.first()
+
+    sections = [
+        ('Resumo Executivo', resumo),
+        ('Histórico e Motivação', historico),
+        ('Modelo de Negócio', modelo),
+        ('Características e Benefícios', caracteristicas),
+        ('Estágio de Desenvolvimento', estagio),
+        ('Análise do Setor', setor),
+        ('Mercado Potencial', mercado),
+        ('Concorrência', concorrencia),
+        ('Posicionamento', posicionamento),
+        ('Foco', foco),
+        ('Plano de Penetração no Mercado', plano),
+        ('Distribuição e Comercialização', distribuicao),
+        ('Produtos, Serviços e Insumos', producao),
+        ('Descrição Legal e Estrutura Societária', descricao),
+        ('Equipe', equipe),
+        ('Terceiros', terceirizacao),
+        ('Alianças e Parcerias', alianca),
+        ('Pesquisa, Desenvolvimento e Inovação', pesquisa),
+        ('Gestão de Qualidade', qualidade),
+        ('Análise de Riscos', risco),
+        ('Fatores Críticos de Sucesso', fatores),
+        ('Cronograma', cronograma),
+        ('Alternativas Estratégicas', alt),
+    ]
+
+    funcionarios = Funcionario.objects.all()
+    funcionarios_data = []
+    for f in funcionarios:
+        total_mensal = f.quantidade * f.salario_inicial
+        funcionarios_data.append({
+            'nome': f.cargo,  # corrigido aqui
+            'quantidade': f.quantidade,
+            'salario_inicial': f.salario_inicial,
+            'total_mensal': total_mensal,
+        })
+
+
+    context = {
+        'sections': sections,
+        'investimentos': Investimento.objects.all(),
+        'total_investimentos': sum(i.total for i in Investimento.objects.all()),
+        'terceiros': Terceiro.objects.all(),
+        'total_terceiros': sum(t.quantidade for t in Terceiro.objects.all()),
+        'total_remuneracoes': sum(t.valor_inicial for t in Terceiro.objects.all()),
+        'funcionarios': funcionarios_data,
+        'total_funcionarios': sum(f['quantidade'] for f in funcionarios_data),
+        'total_salarios': sum(f['total_mensal'] for f in funcionarios_data),
+        'produtos': ProdutoServico.objects.all(),
+        'custos': {c.produto: c for c in CustoProducao.objects.all()},
+        'despesas': DespesaAdministrativa.objects.all(),
+        'total_despesas': sum(d.valor for d in DespesaAdministrativa.objects.all()),
+        'creditos': CreditoTributario.objects.select_related('despesa').all(),
+        'total_credito': sum(((c.despesa.valor * c.aliquota) / 100) for c in CreditoTributario.objects.select_related('despesa').all()),
+    }
+
+    return render(request, 'planodenegocios/visao_geral.html', context)
+
+#PDF
+class WatermarkCanvas(canvas.Canvas):
+    def __init__(self, *args, **kwargs):
+        self.logo_path = kwargs.pop('logo_path', None)
+        super().__init__(*args, **kwargs)
+
+    def draw_watermark(self):
+        if self.logo_path:
+            w, h = A4
+            logo_size = 14*cm
+            self.saveState()
+            self.setFillAlpha(0.1)
+            x = (w - logo_size) / 1.5
+            y = (h - logo_size) / 1.5
+            self.drawImage(self.logo_path, x, y, width=logo_size, height=logo_size, mask='auto')
+            self.restoreState()
+
+    def draw_header(self):
+        if self.logo_path:
+            self.drawImage(self.logo_path, 2*cm, A4[1] - 3.5*cm, width=2.5*cm, height=2.5*cm, mask='auto')
+        self.setFont('Helvetica-Bold', 18)
+        self.setFillColor(HexColor("#1B365D"))  # azul escuro elegante
+        self.drawCentredString(A4[0]/2, A4[1] - 2.5*cm, "Plano de Negócios - Empreenda+")
+
+    def draw_footer(self):
+        self.setFont('Helvetica', 9)
+        self.setFillColor(gray)
+        self.drawCentredString(A4[0]/2, 1.7*cm, f'Página {self.getPageNumber()}')
+
+    def showPage(self):
+        self.draw_watermark()
+        self.draw_header()
+        self.draw_footer()
+        super().showPage()
+
+    def save(self):
+        self.draw_watermark()
+        self.draw_header()
+        self.draw_footer()
+        super().save()
+        
+def gerar_relatorio_pdf(request):
+    buffer = BytesIO()
+    logo_path = finders.find('img/logo-favicon.png')
+
+    doc = SimpleDocTemplate(buffer, pagesize=A4,
+                            rightMargin=2.5*cm, leftMargin=2.5*cm,
+                            topMargin=4*cm, bottomMargin=3*cm)
+
+    styles = getSampleStyleSheet()
+    styles.add(ParagraphStyle(name='Heading2Custom', parent=styles['Heading2'], fontSize=14,
+                              leading=18, textColor=HexColor("#1B365D")))
+    styles.add(ParagraphStyle(name='Heading3Custom', parent=styles['Heading3'], fontSize=12,
+                              leading=14, textColor=gray))
+    styles.add(ParagraphStyle(name='BodyTextCustom', parent=styles['Normal'], fontSize=11,
+                              leading=15, alignment=TA_JUSTIFY))
+
+    elementos = []
+
+    def add_section(title, content):
+        elementos.append(Paragraph(title, styles['Heading2Custom']))
+        elementos.append(Paragraph(content, styles['BodyTextCustom']))
+
+    def add_subsection(title, content):
+        elementos.append(Paragraph(title, styles['Heading3Custom']))
+        elementos.append(Paragraph(content, styles['BodyTextCustom']))
+
+    if resumo := ResumoExecutivo.objects.first():
+        add_section("Resumo Executivo", resumo.texto)
+
+    if historico := HistoricoMotivacao.objects.first():
+        add_section("Histórico e Motivação", historico.texto)
+
+    if modelo := ModeloNegocio.objects.first():
+        add_section("Modelo de Negócio", modelo.texto)
+
+    caracteristicas = CaracteristicasBeneficios.objects.first()
+    estagio = EstagioDesenvolvimento.objects.first()
+    if caracteristicas or estagio:
+        if caracteristicas:
+            add_section("Características e Benefícios", caracteristicas.texto)
+        if estagio:
+            add_section("Estágio de Desenvolvimento", estagio.texto)
+
+    if setor := AnaliseSetor.objects.first():
+        add_section("Análise do Setor", setor.texto)
+
+    if mercado := MercadoPotencial.objects.first():
+        add_section("Mercado Potencial", mercado.texto)
+
+    if concorrencia := AnaliseConcorrencia.objects.first():
+        add_section("Concorrência", concorrencia.texto)
+
+    if pos := Posicionamento.objects.first():
+        add_section("Posicionamento", pos.texto)
+
+    if foco := FocoSegmentacao.objects.first():
+        add_section("Foco", foco.texto)
+
+    if plano := PlanoPenetracaoMercado.objects.first():
+        add_section("Plano de Penetração no Mercado", plano.texto)
+
+    if distribuicao := DistribuicaoComercializacao.objects.first():
+        add_section("Distribuição e Comercialização", distribuicao.texto)
+
+    if producao := ProdutosServicosInsumos.objects.first():
+        add_section("Produtos, Serviços e Insumos", producao.texto)
+
+    if descricao := DescricaoLegalEstruturaSocietaria.objects.first():
+        add_section("Descrição Legal e Estrutura Societária", descricao.texto)
+
+    if equipe := Posicionamento.objects.first():
+        add_section("Equipe", equipe.texto)
+
+    if terceirizacao := TerceirizacaoEquipeApoio.objects.first():
+        add_section("Terceiros", terceirizacao.texto)
+
+    if alianca := AliancasParcerias.objects.first():
+        add_section("Alianças e Parcerias", alianca.texto)
+
+    if pesquisa := PesquisaDesenvolvimentoInovacao.objects.first():
+        add_section("Pesquisa, Desenvolvimento e Inovação", pesquisa.texto)
+
+    if qualidade := GestaoQualidade.objects.first():
+        add_section("Gestão de Qualidade", qualidade.texto)
+
+    if risco := AnaliseRiscos.objects.first():
+        add_section("Análise de Riscos", risco.texto)
+
+    if fatores := FatoresCriticosSucesso.objects.first():
+        add_section("Fatores Críticos de Sucesso", fatores.texto)
+
+    if cronograma := Cronograma.objects.first():
+        add_section("Cronograma", cronograma.texto)
+
+    if alt := AlternativasEstrategicas.objects.first():
+        add_section("Alternativas Estratégicas", alt.texto)
+
+    # Plano Financeiro - Investimentos
+    investimentos = Investimento.objects.all()
+    if investimentos.exists():
+        total = sum(item.total for item in investimentos)
+        add_section("Plano Financeiro", "")  # título principal, conteúdo vazio
+        add_section("Investimentos", f"Total investido: R$ {total:,.2f}")
+
+    # Prestadores de Serviço
+    terceiros = Terceiro.objects.all()
+    if terceiros.exists():
+        total_remuneracoes = sum(t.valor_inicial for t in terceiros)
+        total_terceiros = sum(t.quantidade for t in terceiros)
+        add_section("Prestadores de Serviços", 
+                    f"Total de Terceiros: {total_terceiros}\nValor Total Inicial: R$ {total_remuneracoes:,.2f}")
+
+    # Equipe Própria
+    funcionarios = Funcionario.objects.all()
+    if funcionarios.exists():
+        total_funcionarios = sum(f.quantidade for f in funcionarios)
+        total_salarios = sum(f.quantidade * f.salario_inicial for f in funcionarios)
+        add_section("Equipe Própria", 
+                    f"Total de Funcionários: {total_funcionarios}\nTotal de Salários Mensais: R$ {total_salarios:,.2f}")
+
+    # Produtos e Serviços Detalhados
+    produtos = ProdutoServico.objects.all()
+    if produtos.exists():
+        add_section("Produtos e Serviços", "")
+        for produto in produtos:
+            elementos.append(Paragraph(
+                f"<b>Nome:</b> {produto.nome} | <b>Tipo:</b> {produto.tipo} | <b>Unidade:</b> {produto.unidade_venda}",
+                styles['BodyTextCustom']))
+            elementos.append(Paragraph(
+                f"<b>Preço de Venda:</b> R$ {produto.preco_venda:,.2f} | <b>Margem de Lucro:</b> {produto.margem_lucro:.2f}%",
+                styles['BodyTextCustom']))
+
+            custo = CustoProducao.objects.filter(produto=produto.nome).first()
+            if custo:
+                elementos.append(Paragraph(
+                    f"<b>Frete:</b> R$ {custo.frete:,.2f} | <b>Embalagem:</b> {custo.embalagem or 'N/A'}",
+                    styles['BodyTextCustom']))
+
+    # Despesas Administrativas
+    despesas = DespesaAdministrativa.objects.all()
+    if despesas.exists():
+        total_despesas = sum(d.valor for d in despesas)
+        add_section("Despesas Administrativas", "")
+        for d in despesas:
+            elementos.append(Paragraph(f"{d.nome} (Mês {d.mes}) - R$ {d.valor:,.2f}", styles['BodyTextCustom']))
+        elementos.append(Paragraph(f"Total Geral: R$ {total_despesas:,.2f}", styles['BodyTextCustom']))
+
+    # Créditos Tributários
+    creditos = CreditoTributario.objects.select_related('despesa').all()
+    if creditos.exists():
+        total_credito = Decimal('0')
+        add_section("Créditos Tributários sobre Despesas", "")
+        for c in creditos:
+            valor_credito = (c.despesa.valor * c.aliquota) / Decimal('100')
+            total_credito += valor_credito
+            elementos.append(Paragraph(
+                f"{c.despesa.nome} - Alíquota: {c.aliquota}% | Crédito: R$ {valor_credito:,.2f}", styles['BodyTextCustom']))
+        elementos.append(Paragraph(f"Total de Créditos: R$ {total_credito:,.2f}", styles['BodyTextCustom']))
+
+
+    doc.build(elementos, canvasmaker=lambda *args, **kwargs: WatermarkCanvas(*args, logo_path=logo_path, **kwargs))
+    buffer.seek(0)
+    return FileResponse(buffer, as_attachment=True, filename='plano_de_negocios.pdf')

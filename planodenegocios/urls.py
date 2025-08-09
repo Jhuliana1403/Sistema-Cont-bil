@@ -63,4 +63,8 @@ urlpatterns = [
     path('despesas/excluir/<int:mes>/<int:id>/', views.excluir_despesa, name='excluir_despesa'),
     path('despesas/credito-tributario/', views.credito_tributario_view, name='credito_tributario'),
 
+    #Visão Geral
+    path('relatório_geral/', views.visao_geral, name='relatorio_geral'),
+    #Relatório de PDF's
+    path('relatorio/pdf/', views.gerar_relatorio_pdf, name='relatorio_pdf'), 
 ]
