@@ -8,14 +8,29 @@
 
       <!-- Tabs -->
       <div class="tabs-modern mb-4 d-flex gap-2 justify-content-center">
-        <button id="btn-investimento" class="tab-btn tab-btn-active">Investimento Inicial</button>
-        <button id="btn-ampliacoes" class="tab-btn">Ampliações</button>
+        <button id="btn-investimento" class="tab-btn {% if tab_ativa == 'investimento' %}tab-btn-active{% endif %}">
+          Investimento Inicial
+        </button>
+        <button id="btn-ampliacoes" class="tab-btn {% if tab_ativa == 'ampliacao' %}tab-btn-active{% endif %}">
+          Ampliações
+        </button>
       </div>
 
       <!-- Investimento Inicial -->
-      <div id="conteudo-investimento" class="tab-content active">
+      <div id="conteudo-investimento" class="tab-content {% if tab_ativa != 'investimento' %}d-none{% endif %}">
         <h2 class="card-title text-center mb-4">Investimento Inicial</h2>
         <p class="text-muted text-center mb-4">Informe os investimentos necessários para viabilização do empreendimento</p>
+        
+        {% if messages %}
+        <div class="messages">
+            {% for message in messages %}
+                <div class="alert {% if message.tags %}alert-{{ message.tags }}{% endif %}">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        </div>
+        <script src="{% static 'js/delay_error.js' %}"></script>
+        {% endif %}
 
         <form method="POST" id="form-investimento">
           {% csrf_token %}
@@ -43,8 +58,11 @@
                   <td>{{ item.depreciacao }}%</td>
                   <td>{{ item.credito }}%</td>
                   <td>
+                    <a href="{% url 'editar_investimento' item.id %}" class="btn btn-outline-primary btn-sm me-1" title="Editar">
+                      <i class="bi bi-pencil-fill"></i>
+                    </a>
                     <a href="{% url 'excluir_investimento' item.id %}" class="btn btn-outline-danger btn-sm"
-                       onclick="return confirm('Tem certeza que deseja excluir este investimento?');">
+                       onclick="return confirm('Tem certeza que deseja excluir este investimento?');" title="Excluir">
                       <i class="bi bi-trash-fill"></i>
                     </a>
                   </td>
@@ -70,7 +88,7 @@
       </div>
 
       <!-- Ampliações -->
-      <div id="conteudo-ampliacao" class="tab-content d-none" role="tabpanel" aria-labelledby="btn-ampliacao">
+      <div id="conteudo-ampliacao" class="tab-content {% if tab_ativa != 'ampliacao' %}d-none{% endif %}" role="tabpanel" aria-labelledby="btn-ampliacao">
         <h2 class="card-title text-center mb-4">Ampliações</h2>
         <p class="text-muted text-center mb-4">Informe eventuais ampliações e melhorias na infra-estrutura</p>
 
@@ -100,8 +118,11 @@
                   <td>{{ item.depreciacao }}%</td>
                   <td>{{ item.credito }}%</td>
                   <td>
+                    <a href="{% url 'editar_ampliacao' item.id %}" class="btn btn-outline-primary btn-sm me-1" title="Editar">
+                      <i class="bi bi-pencil-fill"></i>
+                    </a>
                     <a href="{% url 'excluir_ampliacao' item.id %}" class="btn btn-outline-danger btn-sm"
-                      onclick="return confirm('Tem certeza que deseja excluir esta ampliação?');">
+                      onclick="return confirm('Tem certeza que deseja excluir esta ampliação?');" title="Excluir">
                       <i class="bi bi-trash-fill"></i>
                     </a>
                   </td>

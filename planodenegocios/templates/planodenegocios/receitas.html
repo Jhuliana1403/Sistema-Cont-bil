@@ -1,0 +1,95 @@
+{% extends "base.html" %}
+{% load static l10n %}
+
+{% block conteudo %}
+<div class="container my-5">
+  <div class="card shadow-lg border-0">
+    <div class="card-body">
+
+      <!-- Exibir mensagens de erro ou sucesso -->
+      {% if messages %}
+      <div class="messages">
+          {% for message in messages %}
+              <div class="alert {% if message.tags %}alert-{{ message.tags }}{% endif %}">
+                  {{ message }}
+              </div>
+          {% endfor %}
+      </div>
+      <script src="{% static 'js/delay_error.js' %}"></script>
+      {% endif %}
+
+      <h2 class="card-title text-center mb-4">Receitas</h2>
+      <p class="text-muted text-center mb-4">
+        Para cada item abaixo, informe a venda projetada para o primeiro mês.
+      </p>
+
+      <form method="POST">
+        {% csrf_token %}
+        <div class="table-responsive rounded">
+          <table class="table table-hover table-bordered align-middle text-center shadow-sm bg-white rounded">
+            <thead class="table-primary text-dark">
+              <tr>
+                <th>Produtos/Serviços (receitas operacionais)</th>
+                <th>Unidade</th>
+                <th>Quantidade Inicial</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% if linhas %}
+                {% for l in linhas %}
+                <tr>
+                    <td class="text-start">{{ l.nome }}</td>
+                    <td>{{ l.unidade }}</td>
+                    <td>
+                        <input type="number" min="0" step="0.01"
+                        class="form-control form-control-sm text-end"
+                        name="q_{{ l.id }}" value="{{ l.quantidade_str }}">
+                    </td>
+                </tr>
+                {% endfor %}
+              {% else %}
+                <tr>
+                  <td colspan="3" class="text-center fst-italic text-muted">
+                    Sem produtos/serviços cadastrados
+                  </td>
+                </tr>
+              {% endif %}
+
+              <!-- Seção Receitas não operacionais -->
+              <tr class="table-secondary fw-bold">
+                <td class="text-start">Receitas não operacionais</td>
+                <td>Unidade</td>
+                <td>Faturamento Inicial</td>
+              </tr>
+              <tr>
+                <td class="text-start">Outras receitas</td>
+                <td>-</td>
+                <td>
+                  <div class="input-group input-group-sm">
+                    <span class="input-group-text">R$</span>
+                    <input type="number" min="0" step="0.01"
+                      class="form-control text-end"
+                      name="outras_receitas" value="{{ outras_receitas_str }}">
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="d-flex justify-content-between align-items-center mt-3">
+          <div class="fw-semibold">
+            Total estimado (operacional): R$ {{ total_faturamento|floatformat:2 }}
+          </div>
+          <button type="submit" class="btn-salvar">Salvar</button>
+        </div>
+      </form>
+
+    </div>
+  </div>
+</div>
+{% endblock conteudo %}
+
+{% block extra_js %}
+  <script src="{% static 'js/sidebar.js' %}"></script>
+{% endblock extra_js %}

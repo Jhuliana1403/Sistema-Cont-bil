@@ -14,11 +14,11 @@
 
           <div class="mb-3">
             <label class="form-label">Tipo</label>
-            <select class="form-select" name="tipo_de_produto">
+            <select class="form-select" name="tipo_de_produto" required>
               <option value="">Selecione...</option>
-              <option value="Serviço">Serviço</option>
-              <option value="Produto de Terceiros">Produto de Terceiros (compra e revenda)</option>
-              <option value="Fabricação Própria">Fabricação própria (produto industrializado)</option>
+              <option value="servico">Serviço</option>
+              <option value="terceiros">Produto de Terceiros (compra e revenda)</option>
+              <option value="fabricacao">Fabricação própria (produto industrializado)</option>
             </select>
           </div>
 
@@ -31,28 +31,21 @@
             <label class="form-label">Unidade de Venda</label>
             <input type="text" class="form-control" placeholder="Unidade (ex: kg, unidade, litro...)" name="unidade_venda">
           </div>
-
+          
           <div class="mb-3">
-            <label class="form-label">Preço de Venda:</label>
-            <input type="text" class="form-control" placeholder="Preço de Venda" name="preco_venda">
+            <label class="form-label">Preço de Venda do Produto (R$)</label>
+            <input type="number" step="0.01" class="form-control" placeholder="Ex: 50.00" name="precoVenda">
           </div>
-
-          <div id="margem-lucro-container">
-            <div class="mb-3">
-              <label class="form-label">Preço de Venda do Produto (R$)</label>
-              <input type="number" step="0.01" class="form-control" placeholder="Ex: 50.00" name="precoVenda">
-            </div>
-            <div class="mb-3">
-              <label class="form-label">Preço de Compra do Produto (R$)</label>
-              <input type="number" step="0.01" class="form-control" placeholder="Ex: 30.00" name="precoCompra">
-            </div>
+          <div class="mb-3">
+            <label class="form-label">Preço de Compra do Produto (R$)</label>
+            <input type="number" step="0.01" class="form-control" placeholder="Ex: 30.00" name="precoCompra">
           </div>
 
           <div class="table-responsive rounded">
             <table class="table table-hover table-bordered align-middle text-center shadow-sm bg-white rounded" id="tabela-investimentos">
               <thead class="table-primary text-dark">
                 <tr>
-                  <th scope="col">Item / Produto</th>
+                  <th scope="col">Matéria-prima</th>
                   {% for produto in produtos %}
                     <th scope="col">{{ produto.nome }}</th>
                   {% endfor %}
@@ -66,14 +59,14 @@
                   {% for produto in produtos %}
                     <td><input type="number" step="0.01" name="frete_{{ forloop.counter }}" class="form-control" value="{{ produto.frete|default_if_none:'' }}"></td>
                   {% endfor %}
-                  <td><input type="number" step="0.01" id="input-novo-frete" class="form-control" placeholder="Frete (R$)"></td>
+                  <td><input type="number" step="0.01" id="input-novo-frete" name="novo_frete" class="form-control" placeholder="Frete (R$)"></td>
                 </tr>
                 <tr>
                   <th>Embalagem</th>
                   {% for produto in produtos %}
-                    <td><input type="text" name="embalagem_{{ forloop.counter }}" class="form-control" value="{{ produto.embalagem|default_if_none:'' }}"></td>
+                    <td><input type="number" step="0.01" name="embalagem_{{ forloop.counter }}" class="form-control" value="{{ produto.embalagem|default_if_none:'' }}"></td>
                   {% endfor %}
-                  <td><input type="text" id="input-nova-embalagem" class="form-control" placeholder="Embalagem"></td>
+                  <td><input type="number" step="0.01" id="input-nova-embalagem" name="nova_embalagem" class="form-control" placeholder="Embalagem"></td>
                 </tr>
 
                 <!-- Novas linhas para categorias adicionais -->
@@ -81,11 +74,19 @@
                 <tr>
                   <th>{{ coluna.titulo }}</th>
                   {% for produto in produtos %}
-                    <td><input type="text" name="{{ coluna.nome }}_{{ forloop.counter }}" class="form-control"></td>
+                    <td><input type="number" step="0.01" name="{{ coluna.nome }}_{{ forloop.counter }}" class="form-control"></td>
                   {% endfor %}
-                  <td><input type="text" class="form-control nova-coluna-{{ coluna.nome }}" placeholder="{{ coluna.titulo }}"></td>
+                  <td>
+                    <input 
+                      type="number" step="0.01" 
+                      class="form-control nova-coluna-{{ coluna.nome }}" 
+                      placeholder="{{ coluna.titulo }}" 
+                      name="nova_{{ coluna.nome }}" 
+                    >
+                  </td>
                 </tr>
                 {% endfor %}
+                </tr>
               </tbody>
             </table>
 
@@ -94,11 +95,11 @@
               <button type="button" class="btn btn-success" id="btn-adicionar-coluna">Adicionar item</button>
             </div>
 
-        <div class="text-center mt-4">
-          <button type="submit" class="btn-salvar">Salvar</button>
-        </div>
+            <div class="text-center mt-4">
+              <button type="submit" class="btn-salvar">Salvar</button>
+            </div>
 
-        </div>
+          </div>
       </form>
     </div>
   </div>
@@ -108,6 +109,5 @@
 {% block extra_js %}
   <script src="{% static 'js/sidebar.js' %}"></script>
   <script src="{% static 'js/botao-ativacao.js' %}"></script>
-  <script src="{% static 'js/aba-ativar.js' %}"></script>
   <script src="{% static 'js/tabela-materiaprima.js' %}"></script>
 {% endblock extra_js %}

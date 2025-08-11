@@ -1,118 +1,10 @@
 from django.db import models
+from decimal import Decimal
+from django.db import models
+from django.core.validators import MinValueValidator, MaxValueValidator
+from django.db.models import Sum
 
-class Investimento(models.Model):
-    data = models.DateField(null=True, blank=True)
-    descricao = models.CharField(max_length=200)
-    quantidade = models.PositiveIntegerField()
-    valor_unitario = models.DecimalField(max_digits=10, decimal_places=2)
-    depreciacao = models.DecimalField(max_digits=5, decimal_places=2)
-    credito = models.DecimalField(max_digits=5, decimal_places=2)
-    total = models.DecimalField(max_digits=12, decimal_places=2)
-
-    def __str__(self):
-        return self.descricao
-    
-class Ampliacoes(models.Model):
-    data = models.DateField(null=True, blank=True)
-    descricao = models.CharField(max_length=200, null=True)
-    quantidade = models.PositiveIntegerField()
-    valor_unitario = models.DecimalField(max_digits=10, decimal_places=2)
-    depreciacao = models.DecimalField(max_digits=5, decimal_places=2)
-    credito = models.DecimalField(max_digits=5, decimal_places=2)
-    total = models.DecimalField(max_digits=12, decimal_places=2)
-
-    def __str__(self):
-        return self.descricao
-
-# Plano financeiro - equipe própria
-class Funcionario(models.Model):
-    cargo = models.CharField(max_length=100)
-    quantidade = models.PositiveIntegerField()
-    salario_inicial = models.DecimalField(max_digits=10, decimal_places=2)
-
-    @property
-    def valor_inicial(self):
-        return self.quantidade * self.salario_inicial
-
-    def __str__(self):
-        return self.cargo
-
-class SalarioMensal(models.Model):
-    funcionario = models.ForeignKey(Funcionario, on_delete=models.CASCADE)
-    mes = models.PositiveSmallIntegerField()  # 1 a 36 (3 anos)
-    valor = models.DecimalField(max_digits=10, decimal_places=2)
-
-class Encargo(models.Model):
-    funcionario = models.ForeignKey(Funcionario, on_delete=models.CASCADE)
-    percentual = models.DecimalField(max_digits=5, decimal_places=2)  # ex: 30.00
-
-    def calcular_valor_mes(self, mes):
-        salario = SalarioMensal.objects.get(funcionario=self.funcionario, mes=mes).valor
-        return salario * (self.percentual / 100)
-
-class Beneficio(models.Model):
-    funcionario = models.ForeignKey(Funcionario, on_delete=models.CASCADE)
-    tipo = models.CharField(max_length=20, choices=[('alimentacao', 'Alimentação'), ('transporte', 'Transporte')])
-    mes = models.PositiveSmallIntegerField()
-    valor = models.DecimalField(max_digits=10, decimal_places=2)
-
-class EncargoGlobal(models.Model):  # era EncargosOutrosCustos
-    percentual = models.DecimalField(max_digits=5, decimal_places=2, default=0.0)
-
-class DespesaMensal(models.Model):  # era CustoMensal
-    mes = models.PositiveSmallIntegerField()  # 1 a 60
-    tipo = models.CharField(max_length=20, choices=[('alimentacao', 'Alimentação'), ('transporte', 'Transporte')])
-    valor = models.DecimalField(max_digits=10, decimal_places=2, default=0)
-
-# Aba de Produto e Serviço
-class ProdutoServico(models.Model):
-    TIPO_CHOICES = [
-        ('servico', 'Serviço'),
-        ('terceiros', 'Produto de terceiros'),
-        ('fabricacao', 'Fabricação própria'),
-    ]
-
-    tipo = models.CharField(max_length=20, choices=TIPO_CHOICES)
-    nome = models.CharField(max_length=100)
-    unidade_venda = models.CharField(max_length=20)
-    margem_lucro = models.DecimalField(max_digits=5, decimal_places=2)
-    preco_venda = models.DecimalField(max_digits=10, decimal_places=2)
-    preco_varia = models.BooleanField(default=False, null= True)
-
-    def custo_total(self):
-        return sum([c.custo_unitario for c in self.custos.all()])
-
-    def preco_sugerido(self):
-        total = self.custo_total()
-        return total * (1 + self.margem_lucro / 100)
-
-    def __str__(self):
-        return self.nome
-
-class CustoProducao(models.Model):
-    produto = models.CharField(max_length=255)
-    frete = models.DecimalField(max_digits=10, decimal_places=2)
-    embalagem = models.DecimalField(max_digits=10, decimal_places=2)
-
-    def __str__(self):
-        return f"{self.nome}"
-
-class DespesaAdministrativa(models.Model):
-    nome = models.CharField(max_length=100)
-    valor = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
-    mes = models.IntegerField(choices=[(i, f'{i:02d}') for i in range(1, 13)], default=1)
-
-    def __str__(self):
-        return self.nome
-
-class CreditoTributario(models.Model):
-    despesa = models.ForeignKey(DespesaAdministrativa, on_delete=models.CASCADE)
-    aliquota = models.DecimalField(max_digits=5, decimal_places=2, default=0.00)  # percentual, ex: 12.50
-
-    def __str__(self):
-        return f"{self.despesa.nome} - {self.aliquota}%"
-
-
+#Abas de texto
 class ResumoExecutivo(models.Model):
     texto = models.TextField("Resumo Executivo")
     criado_em = models.DateTimeField(auto_now_add=True)
@@ -120,7 +12,6 @@ class ResumoExecutivo(models.Model):
 
     def __str__(self):
         return f"Resumo Executivo ({self.atualizado_em:%d/%m/%Y %H:%M})"
-
 
 class HistoricoMotivacao(models.Model):
     texto = models.TextField("Histórico e Motivação")
@@ -139,7 +30,6 @@ class ModeloNegocio(models.Model):
     def __str__(self):
         return f"Modelo de Negócio ({self.atualizado_em:%d/%m/%Y %H:%M})"
     
-
 class CaracteristicasBeneficios(models.Model):
     texto = models.TextField("Características e Benefícios")
     criado_em = models.DateTimeField(auto_now_add=True)
@@ -165,7 +55,6 @@ class AnaliseSetor(models.Model):
 
     def __str__(self):
         return f"Análise de Setor ({self.atualizado_em:%d/%m/%Y %H:%M})"
-    
 
 class MercadoPotencial(models.Model):
     texto = models.TextField("Mercado Potencial")
@@ -175,7 +64,6 @@ class MercadoPotencial(models.Model):
     def __str__(self):
         return f"Mercado Potencial ({self.atualizado_em:%d/%m/%Y %H:%M})"
     
-
 class AnaliseConcorrencia(models.Model):
     texto = models.TextField("Análise de Concorrência")
     criado_em = models.DateTimeField(auto_now_add=True)
@@ -184,7 +72,6 @@ class AnaliseConcorrencia(models.Model):
     def __str__(self):
         return f"Análise de Concorrência ({self.atualizado_em:%d/%m/%Y %H:%M})"
     
-
 class Posicionamento(models.Model):
     texto = models.TextField("Posicionamento")
     criado_em = models.DateTimeField(auto_now_add=True)
@@ -193,7 +80,6 @@ class Posicionamento(models.Model):
     def __str__(self):
         return f"Posicionamento ({self.atualizado_em:%d/%m/%Y %H:%M})"
     
-
 class FocoSegmentacao(models.Model):
     texto = models.TextField("Foco e Segmentação")
     criado_em = models.DateTimeField(auto_now_add=True)
@@ -201,7 +87,6 @@ class FocoSegmentacao(models.Model):
 
     def __str__(self):
         return f"Foco e Segmentação ({self.atualizado_em:%d/%m/%Y %H:%M})"
-    
 
 class PlanoPenetracaoMercado(models.Model):
     texto = models.TextField("Plano de Penetração no Mercado")
@@ -211,7 +96,6 @@ class PlanoPenetracaoMercado(models.Model):
     def __str__(self):
         return f"Plano de Penetração ({self.atualizado_em:%d/%m/%Y %H:%M})"
     
-
 class DistribuicaoComercializacao(models.Model):
     texto = models.TextField("Distribuição e Comercialização")
     criado_em = models.DateTimeField(auto_now_add=True)
@@ -220,7 +104,6 @@ class DistribuicaoComercializacao(models.Model):
     def __str__(self):
         return f"Distribuição e Comercialização ({self.atualizado_em:%d/%m/%Y %H:%M})"
     
-
 class ProdutosServicosInsumos(models.Model):
     texto = models.TextField("Produtos, Serviços e Insumos")
     criado_em = models.DateTimeField(auto_now_add=True)
@@ -244,6 +127,15 @@ class Equipe(models.Model):
 
     def __str__(self):
         return f"Equipe ({self.atualizado_em:%d/%m/%Y %H:%M})"
+
+class Terceiro(models.Model):
+    nome = models.CharField(max_length=100)
+    quantidade = models.PositiveIntegerField()
+    remuneracao = models.DecimalField(max_digits=10, decimal_places=2)
+
+    @property
+    def valor_inicial(self):
+        return self.quantidade * self.remuneracao
 
 class TerceirizacaoEquipeApoio(models.Model):
     texto = models.TextField("Terceirização e Equipe de Apoio Externo")
@@ -308,3 +200,226 @@ class AlternativasEstrategicas(models.Model):
 
     def __str__(self):
         return f"Alternativas Estratégicas ({self.atualizado_em:%d/%m/%Y %H:%M})"
+
+#Plano Financeiro
+class Investimento(models.Model):
+    data = models.DateField(null=True, blank=True)
+    descricao = models.CharField(max_length=200)
+    quantidade = models.PositiveIntegerField()
+    valor_unitario = models.DecimalField(max_digits=10, decimal_places=2)
+    depreciacao = models.DecimalField(max_digits=5, decimal_places=2)
+    credito = models.DecimalField(max_digits=5, decimal_places=2)
+    total = models.DecimalField(max_digits=12, decimal_places=2)
+
+    def __str__(self):
+        return self.descricao
+    
+class Ampliacoes(models.Model):
+    data = models.DateField(null=True, blank=True)
+    descricao = models.CharField(max_length=200, null=True)
+    quantidade = models.PositiveIntegerField()
+    valor_unitario = models.DecimalField(max_digits=10, decimal_places=2)
+    depreciacao = models.DecimalField(max_digits=5, decimal_places=2)
+    credito = models.DecimalField(max_digits=5, decimal_places=2)
+    total = models.DecimalField(max_digits=12, decimal_places=2)
+
+    def __str__(self):
+        return self.descricao
+
+#Equipe própria
+class Funcionario(models.Model):
+    cargo = models.CharField(max_length=100)
+    quantidade = models.PositiveIntegerField()
+    salario_inicial = models.DecimalField(max_digits=10, decimal_places=2)
+
+    @property
+    def valor_inicial(self):
+        return self.quantidade * self.salario_inicial
+
+    def __str__(self):
+        return self.cargo
+
+class SalarioMensal(models.Model):
+    funcionario = models.ForeignKey(Funcionario, on_delete=models.CASCADE)
+    mes = models.PositiveSmallIntegerField()  # 1 a 36 (3 anos)
+    valor = models.DecimalField(max_digits=10, decimal_places=2)
+
+class Encargo(models.Model):
+    funcionario = models.ForeignKey(Funcionario, on_delete=models.CASCADE)
+    percentual = models.DecimalField(max_digits=5, decimal_places=2)  # ex: 30.00
+
+    def calcular_valor_mes(self, mes):
+        salario = SalarioMensal.objects.get(funcionario=self.funcionario, mes=mes).valor
+        return salario * (self.percentual / 100)
+
+class Beneficio(models.Model):
+    funcionario = models.ForeignKey(Funcionario, on_delete=models.CASCADE)
+    tipo = models.CharField(max_length=20, choices=[('alimentacao', 'Alimentação'), ('transporte', 'Transporte')])
+    mes = models.PositiveSmallIntegerField()
+    valor = models.DecimalField(max_digits=10, decimal_places=2)
+
+class EncargoGlobal(models.Model):  # era EncargosOutrosCustos
+    percentual = models.DecimalField(max_digits=5, decimal_places=2, default=0.0)
+
+class DespesaMensal(models.Model):  # era CustoMensal
+    mes = models.PositiveSmallIntegerField()  # 1 a 60
+    tipo = models.CharField(max_length=20, choices=[('alimentacao', 'Alimentação'), ('transporte', 'Transporte')])
+    valor = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+
+# Aba de Produto e Serviço
+class ProdutoServico(models.Model):
+    tipo = models.CharField(max_length=20, choices=[
+        ('servico', 'Serviço'),
+        ('terceiros', 'Produto de terceiros'),
+        ('fabricacao', 'Fabricação própria')
+    ])
+    nome = models.CharField(max_length=100)
+    unidade_venda = models.CharField(max_length=20)
+    margem_lucro = models.DecimalField(max_digits=5, decimal_places=2)
+    preco_venda = models.DecimalField(max_digits=10, decimal_places=2)
+    preco_compra = models.DecimalField(max_digits=10, decimal_places=2)
+    custo_unitario = models.FloatField(default=0)
+    
+    def custo_total(self):
+        custo_base = self.preco_compra or Decimal('0')
+
+        agregados = self.custos.aggregate(
+            total_frete=Sum('frete'),
+            total_embalagem=Sum('embalagem'),
+            total_materia_prima=Sum('materia_prima')
+        )
+
+        total_frete = agregados['total_frete'] or Decimal('0')
+        total_embalagem = agregados['total_embalagem'] or Decimal('0')
+        total_materia_prima = agregados['total_materia_prima'] or Decimal('0')
+
+        return custo_base + total_frete + total_embalagem + total_materia_prima
+
+    def __str__(self):
+        return self.nome
+
+class CustoProducao(models.Model):
+    produto = models.ForeignKey(ProdutoServico, related_name='custos', on_delete=models.CASCADE)
+    frete = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    embalagem = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    materia_prima = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    nome = models.CharField(max_length=255, blank=True)
+
+    def __str__(self):
+        return self.nome or str(self.produto)
+
+#Aba de Despesas administrativas
+class DespesaAdministrativa(models.Model):
+    nome = models.CharField(max_length=100)
+    valor = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    mes = models.IntegerField(choices=[(i, f'{i:02d}') for i in range(1, 13)], default=1)
+
+    def __str__(self):
+        return self.nome
+
+class CreditoTributario(models.Model):
+    despesa = models.ForeignKey(DespesaAdministrativa, on_delete=models.CASCADE)
+    aliquota = models.DecimalField(max_digits=5, decimal_places=2, default=0.00)  # percentual, ex: 12.50
+
+    def __str__(self):
+        return f"{self.despesa.nome} - {self.aliquota}%"
+
+# TELA RECEITAS
+class ReceitaOperacional(models.Model):
+    """
+    Quantidade projetada de venda no mês 1 para cada Produto/Serviço.
+    """
+    item = models.ForeignKey(
+        'planodenegocios.ProdutoServico',
+        on_delete=models.CASCADE,
+        related_name='receitas'
+    )
+    mes_referencia = models.PositiveSmallIntegerField(default=1)  # mês 1 (igual à planilha)
+    quantidade_inicial = models.DecimalField(
+        max_digits=12, decimal_places=2,
+        validators=[MinValueValidator(Decimal('0'))],
+        default=0
+    )
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=['item', 'mes_referencia'],
+                name='uniq_receita_item_mes'
+            )
+        ]
+        verbose_name = 'Receita operacional'
+        verbose_name_plural = 'Receitas operacionais'
+
+    def __str__(self):
+        return f'{self.item.nome} (mês {self.mes_referencia})'
+
+    @property
+    def unidade(self):
+        # vem direto do ProdutoServico
+        return self.item.unidade_venda
+
+    @property
+    def faturamento_inicial(self):
+        # quantidade * preço de venda cadastrado no ProdutoServico
+        preco = self.item.preco_venda or 0
+        qtd = self.quantidade_inicial or 0
+        return qtd * preco
+
+
+class ReceitaNaoOperacional(models.Model):
+    """
+    Valor global para 'Outras receitas' do mês 1.
+    """
+    descricao = models.CharField(max_length=120, default='Outras receitas')
+    mes_referencia = models.PositiveSmallIntegerField(default=1)
+    valor_inicial = models.DecimalField(
+        max_digits=12, decimal_places=2,
+        validators=[MinValueValidator(Decimal('0'))],
+        default=0
+    )
+
+    class Meta:
+        verbose_name = 'Receita não operacional'
+        verbose_name_plural = 'Receitas não operacionais'
+
+    def __str__(self):
+        return f'{self.descricao} (mês {self.mes_referencia})'
+
+#IMPOSTOS
+class ImpostoLucro(models.Model):
+    """Alíquota média de impostos sobre o lucro para 5 anos."""
+    aliquota_ano1 = models.DecimalField(max_digits=5, decimal_places=2, default=0,
+                                        validators=[MinValueValidator(Decimal('0')), MaxValueValidator(Decimal('100'))])
+    aliquota_ano2 = models.DecimalField(max_digits=5, decimal_places=2, default=0,
+                                        validators=[MinValueValidator(Decimal('0')), MaxValueValidator(Decimal('100'))])
+    aliquota_ano3 = models.DecimalField(max_digits=5, decimal_places=2, default=0,
+                                        validators=[MinValueValidator(Decimal('0')), MaxValueValidator(Decimal('100'))])
+    aliquota_ano4 = models.DecimalField(max_digits=5, decimal_places=2, default=0,
+                                        validators=[MinValueValidator(Decimal('0')), MaxValueValidator(Decimal('100'))])
+    aliquota_ano5 = models.DecimalField(max_digits=5, decimal_places=2, default=0,
+                                        validators=[MinValueValidator(Decimal('0')), MaxValueValidator(Decimal('100'))])
+
+    def __str__(self):
+        return "Impostos sobre o lucro (5 anos)"
+
+
+class ImpostoVendaItem(models.Model):
+    """Alíquotas sobre vendas por produto/serviço para 5 anos."""
+    item = models.ForeignKey('planodenegocios.ProdutoServico', on_delete=models.CASCADE, related_name='impostos_venda')
+    aliquota_ano1 = models.DecimalField(max_digits=5, decimal_places=2, default=0,
+                                        validators=[MinValueValidator(Decimal('0')), MaxValueValidator(Decimal('100'))])
+    aliquota_ano2 = models.DecimalField(max_digits=5, decimal_places=2, default=0,
+                                        validators=[MinValueValidator(Decimal('0')), MaxValueValidator(Decimal('100'))])
+    aliquota_ano3 = models.DecimalField(max_digits=5, decimal_places=2, default=0,
+                                        validators=[MinValueValidator(Decimal('0')), MaxValueValidator(Decimal('100'))])
+    aliquota_ano4 = models.DecimalField(max_digits=5, decimal_places=2, default=0,
+                                        validators=[MinValueValidator(Decimal('0')), MaxValueValidator(Decimal('100'))])
+    aliquota_ano5 = models.DecimalField(max_digits=5, decimal_places=2, default=0,
+                                        validators=[MinValueValidator(Decimal('0')), MaxValueValidator(Decimal('100'))])
+
+    class Meta:
+        unique_together = ('item',)  # um registro por produto
+
+    def __str__(self):
+        return f"Impostos de venda - {self.item.nome}"

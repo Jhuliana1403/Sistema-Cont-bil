@@ -1,0 +1,228 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/report.css' %}">
+{% endblock extra_css %}
+
+{% block conteudo %}
+<div class="container my-5 text-primary-color">
+  <h1 class="mb-5 text-center fw-bold title-primary-color">Visão Geral do Plano de Negócios</h1>
+
+  <div style="display: flex; justify-content: flex-end; margin-bottom: 1rem;">
+    <a href="{% url 'relatorio_pdf' %}" class="btn btn-outline-primary">
+      <i class="bi bi-file-earmark-pdf-fill me-2"></i> Baixar PDF
+    </a>
+  </div>
+
+  <!-- Container com altura fixa e scroll -->
+  <div class="report-container p-4 shadow rounded">
+
+    {% for section, obj in sections %}
+      {% if obj %}
+        <section class="mb-5">
+          <h2 class="h4 fw-semibold border-bottom pb-2 title-primary-color">{{ section }}</h2>
+          <p class="mt-3 text-paragraph-color">{{ obj.texto }}</p>
+        </section>
+      {% endif %}
+    {% endfor %}
+
+    {% if investimentos %}
+      <section class="mb-5">
+        <h2 class="h4 fw-semibold border-bottom pb-2 title-primary-color">Plano Financeiro - Investimentos</h2>
+        <p class="mt-3 text-paragraph-color"><strong>Total investido:</strong> R$ {{ total_investimentos|floatformat:2 }}</p>
+        <div class="table-responsive">
+          <table class="table-report">
+            <thead class="fw-semibold">
+              <tr>
+                <th>Descrição</th>
+                <th>Total</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for i in investimentos %}
+                <tr>
+                  <td>{{ i.descricao|default:"Item" }}</td>
+                  <td>R$ {{ i.total|floatformat:2 }}</td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </section>
+    {% endif %}
+
+    {% if terceiros %}
+      <section class="mb-5">
+        <h2 class="h4 fw-semibold border-bottom pb-2 title-primary-color">Prestadores de Serviços</h2>
+        <p class="mt-3 text-paragraph-color"><strong>Total de Terceiros:</strong> {{ total_terceiros }}</p>
+        <p class="text-paragraph-color"><strong>Valor Total Inicial:</strong> R$ {{ total_remuneracoes|floatformat:2 }}</p>
+        <div class="table-responsive">
+          <table class="table-report">
+            <thead class="fw-semibold">
+              <tr>
+                <th>Nome</th>
+                <th>Quantidade</th>
+                <th>Valor Inicial</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for t in terceiros %}
+                <tr>
+                  <td>{{ t.nome }}</td>
+                  <td>{{ t.quantidade }}</td>
+                  <td>R$ {{ t.valor_inicial|floatformat:2 }}</td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </section>
+    {% endif %}
+
+    {% if funcionarios %}
+      <section class="mb-5">
+        <h2 class="h4 fw-semibold border-bottom pb-2 title-primary-color">Equipe Própria</h2>
+        <p class="mt-3 text-paragraph-color"><strong>Total de Funcionários:</strong> {{ total_funcionarios }}</p>
+        <p class="text-paragraph-color"><strong>Total de Salários Mensais:</strong> R$ {{ total_salarios|floatformat:2 }}</p>
+        <div class="table-responsive">
+          <table class="table-report">
+            <thead class="fw-semibold">
+              <tr>
+                <th>Cargo</th>
+                <th>Quantidade</th>
+                <th>Salário Inicial</th>
+                <th>Total Mensal</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for f in funcionarios %}
+                <tr>
+                  <td>{{ f.cargo }}</td>
+                  <td>{{ f.quantidade }}</td>
+                  <td>R$ {{ f.salario_inicial|floatformat:2 }}</td>
+                  <td>R$ {{ f.total_mensal|floatformat:2 }}</td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </section>
+    {% endif %}
+
+    {% if produtos %}
+      <section class="mb-5">
+        <h2 class="h4 fw-semibold border-bottom pb-2 title-primary-color">Produtos e Serviços</h2>
+        <div class="table-responsive">
+          <table class="table-report">
+            <thead class="fw-semibold">
+              <tr>
+                <th>Nome</th>
+                <th>Tipo</th>
+                <th>Unidade</th>
+                <th>Preço de Venda</th>
+                <th>Margem de Lucro (%)</th>
+                <th>Frete</th>
+                <th>Embalagem</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for p in produtos %}
+                <tr>
+                  <td>{{ p.nome }}</td>
+                  <td>{{ p.tipo }}</td>
+                  <td>{{ p.unidade_venda }}</td>
+                  <td>R$ {{ p.preco_venda|floatformat:2 }}</td>
+                  <td>{{ p.margem_lucro|floatformat:2 }}</td>
+                  <td>{% if p.frete %}R$ {{ p.frete|floatformat:2 }}{% else %}N/A{% endif %}</td>
+                  <td>{% if p.embalagem %}{{ p.embalagem }}{% else %}N/A{% endif %}</td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </section>
+    {% endif %}
+
+    {% if despesas %}
+      <section class="mb-5">
+        <h2 class="h4 fw-semibold border-bottom pb-2 title-primary-color">Despesas Administrativas</h2>
+        <div class="table-responsive">
+          <table class="table-report">
+            <thead class="fw-semibold">
+              <tr>
+                <th>Nome</th>
+                <th>Mês</th>
+                <th>Valor</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for d in despesas %}
+                <tr>
+                  <td>{{ d.nome }}</td>
+                  <td>{{ d.mes }}</td>
+                  <td>R$ {{ d.valor|floatformat:2 }}</td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        <p class="text-end fw-bold mt-2 text-paragraph-color">Total Geral: R$ {{ total_despesas|floatformat:2 }}</p>
+      </section>
+    {% endif %}
+
+    {% if creditos %}
+      <section class="mb-5">
+        <h2 class="h4 fw-semibold border-bottom pb-2 title-primary-color">Créditos Tributários sobre Despesas</h2>
+        <ul class="mt-3" style="padding-left:0; list-style:none;">
+          {% for c in creditos %}
+            <li class="list-group-item-report d-flex justify-content-between align-items-center">
+              {{ c.despesa.nome }} - Alíquota: {{ c.aliquota }}%
+              <span class="badge">{{ c.credito_calculado|floatformat:2 }}</span>
+            </li>
+          {% endfor %}
+        </ul>
+        <p class="text-end fw-bold mt-2 text-paragraph-color">Total de Créditos: R$ {{ total_credito|floatformat:2 }}</p>
+      </section>
+    {% endif %}
+
+    {% if linhas_receitas %}
+    <section class="mb-5">
+      <h2 class="h4 fw-semibold border-bottom pb-2 title-primary-color">Receitas</h2>
+      <div class="table-responsive">
+        <table class="table-report">
+          <thead>
+            <tr>
+              <th>Nome</th>
+              <th>Unidade</th>
+              <th>Quantidade</th>
+              <th>Preço de Venda</th>
+              <th>Total</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for r in linhas_receitas %}
+            <tr>
+              <td>{{ r.nome }}</td>
+              <td>{{ r.unidade }}</td>
+              <td>{{ r.quantidade|floatformat:2 }}</td>
+              <td>R$ {{ r.preco_venda|floatformat:2 }}</td>
+              <td>R$ {{ r.total|floatformat:2 }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      <p class="mt-3 fw-bold">Outras Receitas: R$ {{ outras_receitas|floatformat:2 }}</p>
+      <p class="fw-bold">Total de Faturamento: R$ {{ total_faturamento|floatformat:2 }}</p>
+    </section>
+    {% endif %}
+
+
+  </div>
+</div>
+{% endblock conteudo %}
+
+{% block extra_js %}
+<script src="{% static 'js/sidebar.js' %}"></script>
+{% endblock extra_js %}
