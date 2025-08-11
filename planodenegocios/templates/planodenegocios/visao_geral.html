@@ -9,6 +9,12 @@
 <div class="container my-5 text-primary-color">
   <h1 class="mb-5 text-center fw-bold title-primary-color">Visão Geral do Plano de Negócios</h1>
 
+  <div style="display: flex; justify-content: flex-end; margin-bottom: 1rem;">
+    <a href="{% url 'relatorio_pdf' %}" class="btn btn-outline-primary">
+      <i class="bi bi-file-earmark-pdf-fill me-2"></i> Baixar PDF
+    </a>
+  </div>
+
   <!-- Container com altura fixa e scroll -->
   <div class="report-container p-4 shadow rounded">
 

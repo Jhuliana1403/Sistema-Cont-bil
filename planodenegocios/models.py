@@ -2,6 +2,7 @@ from django.db import models
 from decimal import Decimal
 from django.db import models
 from django.core.validators import MinValueValidator, MaxValueValidator
+from django.db.models import Sum
 
 #Abas de texto
 class ResumoExecutivo(models.Model):
@@ -267,36 +268,45 @@ class DespesaMensal(models.Model):  # era CustoMensal
 
 # Aba de Produto e Serviço
 class ProdutoServico(models.Model):
-    TIPO_CHOICES = [
+    tipo = models.CharField(max_length=20, choices=[
         ('servico', 'Serviço'),
         ('terceiros', 'Produto de terceiros'),
-        ('fabricacao', 'Fabricação própria'),
-    ]
-
-    tipo = models.CharField(max_length=20, choices=TIPO_CHOICES)
+        ('fabricacao', 'Fabricação própria')
+    ])
     nome = models.CharField(max_length=100)
     unidade_venda = models.CharField(max_length=20)
     margem_lucro = models.DecimalField(max_digits=5, decimal_places=2)
     preco_venda = models.DecimalField(max_digits=10, decimal_places=2)
-    preco_varia = models.BooleanField(default=False, null= True)
-
+    preco_compra = models.DecimalField(max_digits=10, decimal_places=2)
+    custo_unitario = models.FloatField(default=0)
+    
     def custo_total(self):
-        return sum([c.custo_unitario for c in self.custos.all()])
+        custo_base = self.preco_compra or Decimal('0')
 
-    def preco_sugerido(self):
-        total = self.custo_total()
-        return total * (1 + self.margem_lucro / 100)
+        agregados = self.custos.aggregate(
+            total_frete=Sum('frete'),
+            total_embalagem=Sum('embalagem'),
+            total_materia_prima=Sum('materia_prima')
+        )
+
+        total_frete = agregados['total_frete'] or Decimal('0')
+        total_embalagem = agregados['total_embalagem'] or Decimal('0')
+        total_materia_prima = agregados['total_materia_prima'] or Decimal('0')
+
+        return custo_base + total_frete + total_embalagem + total_materia_prima
 
     def __str__(self):
         return self.nome
 
 class CustoProducao(models.Model):
-    produto = models.CharField(max_length=255)
-    frete = models.DecimalField(max_digits=10, decimal_places=2)
-    embalagem = models.DecimalField(max_digits=10, decimal_places=2)
+    produto = models.ForeignKey(ProdutoServico, related_name='custos', on_delete=models.CASCADE)
+    frete = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    embalagem = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    materia_prima = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    nome = models.CharField(max_length=255, blank=True)
 
     def __str__(self):
-        return f"{self.nome}"
+        return self.nome or str(self.produto)
 
 #Aba de Despesas administrativas
 class DespesaAdministrativa(models.Model):

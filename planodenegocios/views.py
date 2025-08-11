@@ -11,9 +11,13 @@ from .models import ReceitaOperacional, ReceitaNaoOperacional, ProdutoServico, I
 
 from django.contrib import messages
 
+from django.urls import reverse
+
 from django.db.models import Sum
 
 from django.forms import modelformset_factory
+
+from django.http import HttpResponseRedirect
 
 from django.db import transaction
 
@@ -355,7 +359,7 @@ def investimento(request):
             )
             ampliacao.save()
             messages.success(request, "Ampliação salva com sucesso!")
-            return redirect('investimento')
+            return HttpResponseRedirect(reverse('investimento') + '?tab=ampliacao')
 
     # GET - listar dados
     investimentos = Investimento.objects.all()
@@ -364,12 +368,84 @@ def investimento(request):
     ampliacoes = Ampliacoes.objects.all()
     total_ampliacao = sum(item.total for item in ampliacoes)
 
+    tab_ativa = request.GET.get('tab', 'investimento')  # pegar a aba da query string (default investimento)
+
     return render(request, 'planodenegocios/investimento.html', {
         'investimentos': investimentos,
         'total': total,
         'ampliacoes': ampliacoes,
         'total_ampliacao': total_ampliacao,
+        'tab_ativa': tab_ativa,
     })
+
+
+def editar_investimento(request, investimento_id):
+    investimento = get_object_or_404(Investimento, id=investimento_id)
+
+    if request.method == 'POST':
+        try:
+            investimento.data = request.POST.get('data')
+            investimento.descricao = request.POST.get('descricao')
+            investimento.quantidade = int(request.POST.get('quantidade', 0))
+            investimento.valor_unitario = float(request.POST.get('valor_unitario', 0))
+            investimento.depreciacao = float(request.POST.get('depreciacao', 0))
+            investimento.credito = float(request.POST.get('credito', 0))
+            investimento.total = investimento.quantidade * investimento.valor_unitario
+            investimento.save()
+            messages.success(request, 'Investimento atualizado com sucesso!')
+            return redirect('investimento')
+        except (ValueError, TypeError):
+            messages.error(request, 'Erro ao atualizar. Por favor, verifique os dados.')
+
+    # Corrigir possíveis None ou vazios
+    def safe_float(value):
+        try:
+            return float(value)
+        except (TypeError, ValueError):
+            return 0.0
+
+    def safe_int(value):
+        try:
+            return int(value)
+        except (TypeError, ValueError):
+            return 0
+
+    investimento.valor_unitario = safe_float(investimento.valor_unitario)
+    investimento.depreciacao = safe_float(investimento.depreciacao)
+    investimento.credito = safe_float(investimento.credito)
+    investimento.quantidade = safe_int(investimento.quantidade)
+
+    return render(request, 'planodenegocios/editar_investimento.html', {
+        'investimento': investimento
+    })
+
+
+
+def editar_ampliacao(request, ampliacao_id):
+    ampliacao = get_object_or_404(Ampliacoes, id=ampliacao_id)
+
+    if request.method == 'POST':
+        try:
+            ampliacao.data = request.POST.get('data_ampliacao')
+            ampliacao.descricao = request.POST.get('descricao_ampliacao')
+            ampliacao.quantidade = int(request.POST.get('quantidade_ampliacao', 0))
+            ampliacao.valor_unitario = float(request.POST.get('valor_unitario_ampliacao', 0))
+            ampliacao.depreciacao = float(request.POST.get('depreciacao_ampliacao', 0))
+            ampliacao.credito = float(request.POST.get('credito_ampliacao', 0))
+            ampliacao.total = ampliacao.quantidade * ampliacao.valor_unitario
+            ampliacao.save()
+            messages.success(request, 'Ampliação atualizada com sucesso!')
+            url = reverse('investimento') + '?tab=ampliacao'  # Mantém a aba ativa "Ampliações"
+            return redirect(url)
+        except (ValueError, TypeError):
+            messages.error(request, 'Erro ao atualizar. Por favor, verifique os dados.')
+
+    # GET
+    context = {
+        'ampliacao': ampliacao,
+        'form_type': 'ampliacao'
+    }
+    return render(request, 'planodenegocios/editar_ampliacao.html', context)
 
 def excluir_investimento(request, investimento_id):
     investimento = get_object_or_404(Investimento, id=investimento_id)  
@@ -379,11 +455,16 @@ def excluir_investimento(request, investimento_id):
 
 def excluir_ampliacao(request, ampliacao_id):
     ampliacao = get_object_or_404(Ampliacoes, id=ampliacao_id)
+    descricao = ampliacao.descricao  
     ampliacao.delete()
-    messages.success(request, f'A ampliação "{ampliacao.descricao}" foi excluída com sucesso!')
-    return redirect('investimento')
+    messages.success(request, f'A ampliação "{descricao}" foi excluída com sucesso!')
+    url = reverse('investimento') + '?tab=ampliacao'  
+    return redirect(url)
+
 
 def equipe_propria(request):
+    aba_ativa = 'funcionario'  # aba padrão
+
     if request.method == 'POST':
         # === Verifica se é o formulário de equipe ===
         if 'form-equipe' in request.POST:
@@ -393,27 +474,29 @@ def equipe_propria(request):
 
             if not cargo or not quantidade or not salario:
                 messages.error(request, "Todos os campos são obrigatórios.")
-                return redirect('equipe_propria')
+                aba_ativa = 'funcionario'
+                # vamos prosseguir para reexibir a página com mensagens
 
-            try:
-                quantidade = int(quantidade)
-                salario = Decimal(salario)
-            except (ValueError, TypeError):
-                messages.error(request, "Quantidade e salário devem ser números válidos.")
-                return redirect('equipe_propria')
-
-            funcionario = Funcionario(
-                cargo=cargo,
-                quantidade=quantidade,
-                salario_inicial=salario,
-            )
-            funcionario.save()
-            messages.success(request, "Funcionário adicionado com sucesso!")
-            return redirect('equipe_propria')
+            else:
+                try:
+                    quantidade = int(quantidade)
+                    salario = Decimal(salario)
+                except (ValueError, TypeError):
+                    messages.error(request, "Quantidade e salário devem ser números válidos.")
+                    aba_ativa = 'funcionario'
+                else:
+                    funcionario = Funcionario(
+                        cargo=cargo,
+                        quantidade=quantidade,
+                        salario_inicial=salario,
+                    )
+                    funcionario.save()
+                    messages.success(request, "Funcionário adicionado com sucesso!")
+                    aba_ativa = 'funcionario'
+                    # após salvar, recarregar página
 
         # === Verifica se é o formulário de encargos ===
         elif 'form-encargos' in request.POST:
-            # Percentual médio
             percentual = request.POST.get('percentual_encargos', '0').replace(',', '.')
             try:
                 percentual = float(percentual)
@@ -421,12 +504,12 @@ def equipe_propria(request):
                 encargo.percentual = percentual
                 encargo.save()
                 messages.success(request, "Encargos atualizados com sucesso!")
+                aba_ativa = 'encargos'
             except:
                 messages.error(request, "Percentual inválido.")
+                aba_ativa = 'encargos'
 
-            return redirect('equipe_propria')
-
-    # === Parte comum (GET) ===
+    # === Parte comum (GET e após POST) ===
     funcionarios = Funcionario.objects.all()
     dados_funcionarios = []
     total_salario_mensal = Decimal('0')
@@ -444,17 +527,14 @@ def equipe_propria(request):
             'total_ano_v': total_mensal * 12,
         })
 
-    # === Encargos sociais médios ===
     encargo = EncargoGlobal.objects.first()
     percentual_encargos = encargo.percentual if encargo else Decimal('0')
     percentual_encargos_decimal = Decimal(percentual_encargos) / Decimal('100')
     total_encargos_ano = total_salario_mensal * percentual_encargos_decimal * Decimal('12')
 
-    # === Despesas com alimentação e transporte ===
     despesas_alimentacao = DespesaMensal.objects.filter(tipo='alimentacao')
     despesas_transporte = DespesaMensal.objects.filter(tipo='transporte')
 
-    # --- Mês a mês (1 a 12) ---
     salarios_mes = []
     encargos_mes = []
     subtotal_mes = []
@@ -478,7 +558,6 @@ def equipe_propria(request):
         transporte_mes.append(transporte)
         total_geral_mes.append(total)
 
-    # --- Totais por ano (12 em 12) ---
     def agrupar_em_anos(lista):
         return [sum(lista[i*12:(i+1)*12]) for i in range(5)]
 
@@ -489,10 +568,8 @@ def equipe_propria(request):
     totais_transporte = agrupar_em_anos(transporte_mes)
     totais_geral = agrupar_em_anos(total_geral_mes)
 
-    # --- Soma de colaboradores ---
     total_colaboradores = sum(f.quantidade for f in funcionarios)
 
-    # === Render ===
     return render(request, 'planodenegocios/equipe_propria.html', {
         'funcionarios': funcionarios,
         'dados_funcionarios': dados_funcionarios,
@@ -513,7 +590,40 @@ def equipe_propria(request):
         'totais_alimentacao': totais_alimentacao,
         'totais_transporte': totais_transporte,
         'totais_geral': totais_geral,
+        'aba_ativa': aba_ativa,
     })
+
+def editar_funcionario(request, funcionario_id):
+    funcionario = get_object_or_404(Funcionario, id=funcionario_id)
+
+    if request.method == 'POST':
+        cargo = request.POST.get('cargo', '').strip()
+        quantidade = request.POST.get('quantidade')
+        salario = request.POST.get('salario_inicial')
+
+        if not cargo or not quantidade or not salario:
+            messages.error(request, "Todos os campos são obrigatórios.")
+            return redirect('editar_funcionario', funcionario_id=funcionario_id)
+
+        try:
+            quantidade = int(quantidade)
+            salario = Decimal(salario)
+        except (ValueError, TypeError):
+            messages.error(request, "Quantidade e salário devem ser números válidos.")
+            return redirect('editar_funcionario', funcionario_id=funcionario_id)
+
+        funcionario.cargo = cargo
+        funcionario.quantidade = quantidade
+        funcionario.salario_inicial = salario
+        funcionario.save()
+        messages.success(request, "Funcionário atualizado com sucesso!")
+        return redirect('equipe_propria')
+
+    # GET - exibe o formulário com dados atuais
+    context = {
+        'funcionario': funcionario,
+    }
+    return render(request, 'planodenegocios/editar_funcionario.html', context)
 
 #Prestadores de Serviço
 def terceiros(request):
@@ -547,6 +657,37 @@ def terceiros(request):
         'soma_remuneracoes': soma_remuneracoes,
     })
 
+def editar_terceiro(request, id):
+    terceiro = get_object_or_404(Terceiro, id=id)
+
+    if request.method == 'POST':
+        nome = request.POST.get('nome', '').strip()
+        quantidade = request.POST.get('quantidade', '0').strip()
+        remuneracao = request.POST.get('remuneracao', '0').replace(',', '.').strip()
+
+        if not nome or not quantidade.isdigit() or not remuneracao:
+            messages.error(request, "Preencha todos os campos corretamente.")
+            return redirect('editar_terceiro', id=id)
+
+        try:
+            qtd_int = int(quantidade)
+            rem_dec = float(remuneracao)
+            if qtd_int <= 0 or rem_dec < 0:
+                messages.error(request, "Quantidade deve ser maior que 0 e remuneração não negativa.")
+                return redirect('editar_terceiro', id=id)
+        except ValueError:
+            messages.error(request, "Quantidade e remuneração devem ser números válidos.")
+            return redirect('editar_terceiro', id=id)
+
+        terceiro.nome = nome
+        terceiro.quantidade = qtd_int
+        terceiro.remuneracao = rem_dec
+        terceiro.save()
+
+        messages.success(request, "Prestador de serviço atualizado com sucesso!")
+        return redirect('terceiros')
+
+    return render(request, 'planodenegocios/editar_terceiro.html', {'terceiro': terceiro})
 
 def excluir_terceiro(request, pk):
     terceiro = get_object_or_404(Terceiro, pk=pk)
@@ -558,12 +699,17 @@ def excluir_todos_terceiros(request):
     Terceiro.objects.all().delete()
     return redirect('terceiros') 
 
-#Produtos e Serviços
+#Produtos e Se
 def produto(request):
-    produtos = ProdutoServico.objects.all()  
+    produtos = ProdutoServico.objects.all()
+    for p in produtos:
+        p.custo_unitario = p.custo_total()  # chame método com parênteses
+
+    total = sum(p.custo_unitario for p in produtos)
 
     return render(request, "planodenegocios/produto.html", {
-        'produtos': produtos  
+        'produtos': produtos,
+        'total': total,
     })
 
 def cadastrar_produto(request):
@@ -584,15 +730,19 @@ def cadastrar_produto(request):
         preco_venda_calculado = to_float(request.POST.get("precoVenda"))
         preco_compra = to_float(request.POST.get("precoCompra"))
 
-        # Decidir qual preço_venda usar para salvar (exemplo: priorizar o inserido manualmente)
         preco_venda_final = preco_venda_inserido if preco_venda_inserido > 0 else preco_venda_calculado
 
         if preco_compra > 0:
             markup = ((preco_venda_final - preco_compra) / preco_compra) * 100
 
-        frete = request.POST.get("novo_frete") or "0"
-        embalagem = request.POST.get("nova_embalagem") or ""
-        nova_materia_prima = request.POST.get("nova_materia_prima") or ""
+        frete = to_float(request.POST.get("novo_frete") or "0")
+        embalagem = to_float(request.POST.get("nova_embalagem") or "0")
+
+        # Pegue valores adicionais, por exemplo:
+        materia_prima = to_float(request.POST.get("nova_materia_prima") or "0")
+
+        # Soma custos unitários
+        custo_unitario = frete + embalagem + materia_prima
 
         try:
             produto = ProdutoServico.objects.create(
@@ -601,13 +751,16 @@ def cadastrar_produto(request):
                 unidade_venda=unidade,
                 margem_lucro=markup or 0,
                 preco_venda=preco_venda_final,
+                preco_compra=preco_compra
             )
 
-            if frete != "0" or embalagem or nova_materia_prima:
+            # Salva custos detalhados se quiser
+            if custo_unitario > 0:
                 CustoProducao.objects.create(
-                    produto=produto.nome,
-                    frete=float(frete),
-                    embalagem=embalagem
+                    produto=produto,
+                    frete=frete,
+                    embalagem=embalagem,
+                    materia_prima=materia_prima
                 )
 
             messages.success(request, "Produto, serviço ou insumo salvo com sucesso!")
@@ -618,11 +771,90 @@ def cadastrar_produto(request):
 
     return render(request, "planodenegocios/cadastrar_produto.html", {'markup': markup})
 
+def editar_produto(request, produto_id):
+    produto = get_object_or_404(ProdutoServico, id=produto_id)
+    markup = None
+
+    def to_float(valor):
+        try:
+            return float(valor)
+        except (TypeError, ValueError):
+            return 0.0
+
+    if request.method == "POST":
+        tipo = request.POST.get("tipo_de_produto")
+        nome = request.POST.get("nome_produto")
+        unidade = request.POST.get("unidade_venda")
+
+        preco_venda_inserido = to_float(request.POST.get("preco_venda"))
+        preco_venda_calculado = to_float(request.POST.get("precoVenda"))
+        preco_compra = to_float(request.POST.get("precoCompra"))
+
+        preco_venda_final = preco_venda_inserido if preco_venda_inserido > 0 else preco_venda_calculado
+
+        if preco_compra > 0:
+            markup = ((preco_venda_final - preco_compra) / preco_compra) * 100
+
+        frete = to_float(request.POST.get("novo_frete") or "0")
+        embalagem = to_float(request.POST.get("nova_embalagem") or "0")
+        materia_prima = to_float(request.POST.get("nova_materia_prima") or "0")
+
+        custo_unitario = frete + embalagem + materia_prima
+
+        try:
+            # Atualiza os campos do produto
+            produto.tipo = tipo
+            produto.nome = nome
+            produto.unidade_venda = unidade
+            produto.margem_lucro = markup or 0
+            produto.preco_venda = preco_venda_final
+            produto.preco_compra = preco_compra
+            produto.save()
+
+            # Atualiza ou cria o custo de produção relacionado
+            custo, criado = CustoProducao.objects.get_or_create(produto=produto)
+            custo.frete = frete
+            custo.embalagem = embalagem
+            custo.materia_prima = materia_prima
+            custo.save()
+
+            messages.success(request, "Produto atualizado com sucesso!")
+            return redirect("produto")
+
+        except Exception as e:
+            messages.error(request, f"Erro ao atualizar: {str(e)}")
+
+    else:
+        # Caso GET, preenche os valores iniciais para exibir no formulário
+        # Pegando os custos relacionados, se existirem
+        try:
+            custo = CustoProducao.objects.get(produto=produto)
+            frete = custo.frete
+            embalagem = custo.embalagem
+            materia_prima = custo.materia_prima
+        except CustoProducao.DoesNotExist:
+            frete = embalagem = materia_prima = 0
+
+        preco_venda_final = produto.preco_venda
+        preco_compra = produto.preco_compra
+        markup = produto.margem_lucro
+
+    contexto = {
+        'produto': produto,
+        'markup': markup,
+        'frete': frete,
+        'embalagem': embalagem,
+        'materia_prima': materia_prima,
+        'preco_venda_final': preco_venda_final,
+        'preco_compra': preco_compra,
+    }
+
+    return render(request, "planodenegocios/editar_produto.html", contexto)
 
 def excluir_produto(request, produto_id):
     produto = get_object_or_404(ProdutoServico, id=produto_id)
     produto.delete()
-    messages.success(request, f'O produto/serviço "{produto.nome}" foi excluída com sucesso!')
+    messages.success(request, f'O produto/serviço "{produto.nome}" foi excluído com sucesso!')
     return redirect('produto')
 
 
@@ -744,6 +976,198 @@ def credito_tributario_view(request):
         'despesas_com_creditos': despesas_com_creditos,
         'lista_calculos': lista_calculos,
     })
+
+#RECEITAS
+def _to_decimal(raw: str) -> Decimal:
+    if raw is None:
+        return Decimal("0")
+    raw = raw.strip().replace(",", ".")
+    if raw == "":
+        return Decimal("0")
+    try:
+        return Decimal(raw)
+    except InvalidOperation:
+        return Decimal("0")
+
+def receitas(request):
+    itens = (ProdutoServico.objects
+            .only('id', 'nome', 'unidade_venda', 'preco_venda')
+            .order_by('nome'))
+
+    # sempre busque do banco (nada de cache local antes do POST)
+    outras, _ = ReceitaNaoOperacional.objects.get_or_create(
+        mes_referencia=1, descricao='Outras receitas'
+    )
+
+    if request.method == 'POST':
+        try:
+            with transaction.atomic():
+                # salva cada produto/serviço de forma idempotente
+                for p in itens:
+                    qtd = _to_decimal(request.POST.get(f"q_{p.id}"))
+                    rec, _ = ReceitaOperacional.objects.get_or_create(
+                        item=p, mes_referencia=1
+                    )
+                    rec.quantidade_inicial = qtd
+                    rec.save()
+
+                # salva "outras receitas"
+                outras.valor_inicial = _to_decimal(request.POST.get("outras_receitas"))
+                outras.save()
+
+            messages.success(request, "Receitas salvas com sucesso!")
+            return redirect('receitas')  # novo GET, garantindo leitura fresca do BD
+
+        except Exception as e:
+            messages.error(request, f"Erro ao salvar: {e}")
+
+    # GET (ou pós-redirect): sempre leia do BD atualizado
+    receitas_map = {
+        r.item_id: r.quantidade_inicial
+        for r in ReceitaOperacional.objects
+            .filter(mes_referencia=1, item__in=itens)
+            .only('item_id', 'quantidade_inicial')
+    }
+
+    total_faturamento = Decimal("0")
+    linhas = []
+    for p in itens:
+        qtd = receitas_map.get(p.id, Decimal("0"))
+        preco = p.preco_venda or Decimal("0")
+        total_faturamento += qtd * preco
+
+        # string já no formato aceito por <input type="number"> (ponto, sem locale)
+        qtd_str = f"{qtd:.2f}".replace(",", ".")  # Decimal já usa ponto, mas garantimos
+
+        linhas.append({
+            "id": p.id,
+            "nome": p.nome,
+            "unidade": p.unidade_venda,
+            "quantidade": qtd,        # fica pra cálculos, se precisar
+            "quantidade_str": qtd_str # vai direto no value do input
+        })
+
+    outras_str = f"{(outras.valor_inicial or Decimal('0')):.2f}"
+
+    contexto = {
+        "linhas": linhas,
+        "total_faturamento": total_faturamento,
+        "outras_receitas": outras.valor_inicial or Decimal("0"),
+        "outras_receitas_str": outras_str,
+    }
+    return render(request, 'planodenegocios/receitas.html', contexto)
+
+
+#IMPOSTOS
+def _to_pct(raw: str) -> Decimal:
+    if raw is None:
+        return Decimal("0")
+    raw = raw.strip().replace(",", ".").replace("%", "")
+    if raw == "":
+        return Decimal("0")
+    try:
+        v = Decimal(raw)
+    except InvalidOperation:
+        return Decimal("0")
+    # clamp 0..100
+    return max(Decimal("0"), min(v, Decimal("100")))
+
+def impostos(request):
+    # ----- itens base (produtos/serviços/insumos) -----
+    itens = (ProdutoServico.objects
+             .only('id', 'nome')
+             .order_by('nome'))
+
+    # garantir 1 registro ImpostoLucro e 1 por item
+    lucro, _ = ImpostoLucro.objects.get_or_create(id=1)
+
+    existentes = {ivi.item_id: ivi for ivi in ImpostoVendaItem.objects.select_related('item')}
+    novos = [ImpostoVendaItem(item=p) for p in itens if p.id not in existentes]
+    if novos:
+        ImpostoVendaItem.objects.bulk_create(novos)
+        existentes = {ivi.item_id: ivi for ivi in ImpostoVendaItem.objects.select_related('item')}
+
+    # ----- modo (const/var) persistido) -----
+    if request.method == 'POST':
+        modo = request.POST.get('modo') or request.session.get('impostos_modo', 'const')
+    else:
+        modo = request.session.get('impostos_modo', 'const')
+
+    if request.method == 'POST':
+        try:
+            with transaction.atomic():
+                # Lucro
+                if modo == 'const':
+                    base = _to_pct(request.POST.get('pl_1'))
+                    lucro.aliquota_ano1 = lucro.aliquota_ano2 = lucro.aliquota_ano3 = lucro.aliquota_ano4 = lucro.aliquota_ano5 = base
+                else:
+                    lucro.aliquota_ano1 = _to_pct(request.POST.get('pl_1'))
+                    lucro.aliquota_ano2 = _to_pct(request.POST.get('pl_2'))
+                    lucro.aliquota_ano3 = _to_pct(request.POST.get('pl_3'))
+                    lucro.aliquota_ano4 = _to_pct(request.POST.get('pl_4'))
+                    lucro.aliquota_ano5 = _to_pct(request.POST.get('pl_5'))
+                lucro.save()
+
+                # Vendas por item
+                to_update = []
+                for p in itens:
+                    imp = existentes[p.id]
+                    if modo == 'const':
+                        base = _to_pct(request.POST.get(f'pv_{p.id}_1'))
+                        imp.aliquota_ano1 = imp.aliquota_ano2 = imp.aliquota_ano3 = imp.aliquota_ano4 = imp.aliquota_ano5 = base
+                    else:
+                        imp.aliquota_ano1 = _to_pct(request.POST.get(f'pv_{p.id}_1'))
+                        imp.aliquota_ano2 = _to_pct(request.POST.get(f'pv_{p.id}_2'))
+                        imp.aliquota_ano3 = _to_pct(request.POST.get(f'pv_{p.id}_3'))
+                        imp.aliquota_ano4 = _to_pct(request.POST.get(f'pv_{p.id}_4'))
+                        imp.aliquota_ano5 = _to_pct(request.POST.get(f'pv_{p.id}_5'))
+                    to_update.append(imp)
+
+                ImpostoVendaItem.objects.bulk_update(
+                    to_update,
+                    ['aliquota_ano1', 'aliquota_ano2', 'aliquota_ano3', 'aliquota_ano4', 'aliquota_ano5']
+                )
+
+            # guarda o modo na sessão
+            request.session['impostos_modo'] = modo
+
+            messages.success(request, "Impostos salvos com sucesso!")
+            return redirect('impostos')  # PRG: novo GET vai ler do BD e preencher os campos
+
+        except Exception as e:
+            messages.error(request, f"Erro ao salvar: {e}")
+            # cai pro GET abaixo para renderizar com o que está no BD
+
+    # ----- GET (ou após redirect): montar contexto a partir do BD -----
+    lucro_cols = []
+    for ano, v in enumerate([
+        lucro.aliquota_ano1, lucro.aliquota_ano2, lucro.aliquota_ano3,
+        lucro.aliquota_ano4, lucro.aliquota_ano5
+    ], start=1):
+        v = v or Decimal("0")
+        lucro_cols.append({"ano": ano, "valor": v, "valor_str": f"{v:.2f}"})
+
+    linhas = []
+    for p in itens:
+        imp = existentes[p.id]
+        valores = [
+            imp.aliquota_ano1 or Decimal("0"),
+            imp.aliquota_ano2 or Decimal("0"),
+            imp.aliquota_ano3 or Decimal("0"),
+            imp.aliquota_ano4 or Decimal("0"),
+            imp.aliquota_ano5 or Decimal("0"),
+        ]
+        cols = []
+        for ano, v in enumerate(valores, start=1):
+            cols.append({"ano": ano, "valor": v, "valor_str": f"{v:.2f}"})
+        linhas.append({"id": p.id, "nome": p.nome, "cols": cols})
+
+    contexto = {
+        "modo": modo,
+        "lucro_cols": lucro_cols,
+        "linhas": linhas,
+    }
+    return render(request, 'planodenegocios/impostos.html', contexto)
 
 #Visão Geral
 def visao_geral(request):
@@ -1065,7 +1489,8 @@ def gerar_relatorio_pdf(request):
                 f"<b>Preço de Venda:</b> R$ {produto.preco_venda:,.2f} | <b>Margem de Lucro:</b> {produto.margem_lucro:.2f}%",
                 styles['BodyTextCustom']))
 
-            custo = CustoProducao.objects.filter(produto=produto.nome).first()
+            # Aqui corrigido: buscar custo pelo objeto produto, não pelo nome
+            custo = CustoProducao.objects.filter(produto=produto).first()
             if custo:
                 elementos.append(Paragraph(
                     f"<b>Frete:</b> R$ {custo.frete:,.2f} | <b>Embalagem:</b> {custo.embalagem or 'N/A'}",
@@ -1092,7 +1517,7 @@ def gerar_relatorio_pdf(request):
                 f"{c.despesa.nome} - Alíquota: {c.aliquota}% | Crédito: R$ {valor_credito:,.2f}", styles['BodyTextCustom']))
         elementos.append(Paragraph(f"Total de Créditos: R$ {total_credito:,.2f}", styles['BodyTextCustom']))
 
-     # --- Seção Impostos ---
+    # --- Seção Impostos ---
     lucro = ImpostoLucro.objects.first()
     impostos_venda = ImpostoVendaItem.objects.select_related('item').all().order_by('item__nome')
 
@@ -1128,196 +1553,3 @@ def gerar_relatorio_pdf(request):
     doc.build(elementos, canvasmaker=lambda *args, **kwargs: WatermarkCanvas(*args, logo_path=logo_path, **kwargs))
     buffer.seek(0)
     return FileResponse(buffer, as_attachment=True, filename='plano_de_negocios.pdf')
-
-
-#RECEITAS
-def _to_decimal(raw: str) -> Decimal:
-    if raw is None:
-        return Decimal("0")
-    raw = raw.strip().replace(",", ".")
-    if raw == "":
-        return Decimal("0")
-    try:
-        return Decimal(raw)
-    except InvalidOperation:
-        return Decimal("0")
-
-def receitas(request):
-    itens = (ProdutoServico.objects
-            .only('id', 'nome', 'unidade_venda', 'preco_venda')
-            .order_by('nome'))
-
-    # sempre busque do banco (nada de cache local antes do POST)
-    outras, _ = ReceitaNaoOperacional.objects.get_or_create(
-        mes_referencia=1, descricao='Outras receitas'
-    )
-
-    if request.method == 'POST':
-        try:
-            with transaction.atomic():
-                # salva cada produto/serviço de forma idempotente
-                for p in itens:
-                    qtd = _to_decimal(request.POST.get(f"q_{p.id}"))
-                    rec, _ = ReceitaOperacional.objects.get_or_create(
-                        item=p, mes_referencia=1
-                    )
-                    rec.quantidade_inicial = qtd
-                    rec.save()
-
-                # salva "outras receitas"
-                outras.valor_inicial = _to_decimal(request.POST.get("outras_receitas"))
-                outras.save()
-
-            messages.success(request, "Receitas salvas com sucesso!")
-            return redirect('receitas')  # novo GET, garantindo leitura fresca do BD
-
-        except Exception as e:
-            messages.error(request, f"Erro ao salvar: {e}")
-
-    # GET (ou pós-redirect): sempre leia do BD atualizado
-    receitas_map = {
-        r.item_id: r.quantidade_inicial
-        for r in ReceitaOperacional.objects
-            .filter(mes_referencia=1, item__in=itens)
-            .only('item_id', 'quantidade_inicial')
-    }
-
-    total_faturamento = Decimal("0")
-    linhas = []
-    for p in itens:
-        qtd = receitas_map.get(p.id, Decimal("0"))
-        preco = p.preco_venda or Decimal("0")
-        total_faturamento += qtd * preco
-
-        # string já no formato aceito por <input type="number"> (ponto, sem locale)
-        qtd_str = f"{qtd:.2f}".replace(",", ".")  # Decimal já usa ponto, mas garantimos
-
-        linhas.append({
-            "id": p.id,
-            "nome": p.nome,
-            "unidade": p.unidade_venda,
-            "quantidade": qtd,        # fica pra cálculos, se precisar
-            "quantidade_str": qtd_str # vai direto no value do input
-        })
-
-    outras_str = f"{(outras.valor_inicial or Decimal('0')):.2f}"
-
-    contexto = {
-        "linhas": linhas,
-        "total_faturamento": total_faturamento,
-        "outras_receitas": outras.valor_inicial or Decimal("0"),
-        "outras_receitas_str": outras_str,
-    }
-    return render(request, 'planodenegocios/receitas.html', contexto)
-
-
-#IMPOSTOS
-def _to_pct(raw: str) -> Decimal:
-    if raw is None:
-        return Decimal("0")
-    raw = raw.strip().replace(",", ".").replace("%", "")
-    if raw == "":
-        return Decimal("0")
-    try:
-        v = Decimal(raw)
-    except InvalidOperation:
-        return Decimal("0")
-    # clamp 0..100
-    return max(Decimal("0"), min(v, Decimal("100")))
-
-def impostos(request):
-    # ----- itens base (produtos/serviços/insumos) -----
-    itens = (ProdutoServico.objects
-             .only('id', 'nome')
-             .order_by('nome'))
-
-    # garantir 1 registro ImpostoLucro e 1 por item
-    lucro, _ = ImpostoLucro.objects.get_or_create(id=1)
-
-    existentes = {ivi.item_id: ivi for ivi in ImpostoVendaItem.objects.select_related('item')}
-    novos = [ImpostoVendaItem(item=p) for p in itens if p.id not in existentes]
-    if novos:
-        ImpostoVendaItem.objects.bulk_create(novos)
-        existentes = {ivi.item_id: ivi for ivi in ImpostoVendaItem.objects.select_related('item')}
-
-    # ----- modo (const/var) persistido) -----
-    if request.method == 'POST':
-        modo = request.POST.get('modo') or request.session.get('impostos_modo', 'const')
-    else:
-        modo = request.session.get('impostos_modo', 'const')
-
-    if request.method == 'POST':
-        try:
-            with transaction.atomic():
-                # Lucro
-                if modo == 'const':
-                    base = _to_pct(request.POST.get('pl_1'))
-                    lucro.aliquota_ano1 = lucro.aliquota_ano2 = lucro.aliquota_ano3 = lucro.aliquota_ano4 = lucro.aliquota_ano5 = base
-                else:
-                    lucro.aliquota_ano1 = _to_pct(request.POST.get('pl_1'))
-                    lucro.aliquota_ano2 = _to_pct(request.POST.get('pl_2'))
-                    lucro.aliquota_ano3 = _to_pct(request.POST.get('pl_3'))
-                    lucro.aliquota_ano4 = _to_pct(request.POST.get('pl_4'))
-                    lucro.aliquota_ano5 = _to_pct(request.POST.get('pl_5'))
-                lucro.save()
-
-                # Vendas por item
-                to_update = []
-                for p in itens:
-                    imp = existentes[p.id]
-                    if modo == 'const':
-                        base = _to_pct(request.POST.get(f'pv_{p.id}_1'))
-                        imp.aliquota_ano1 = imp.aliquota_ano2 = imp.aliquota_ano3 = imp.aliquota_ano4 = imp.aliquota_ano5 = base
-                    else:
-                        imp.aliquota_ano1 = _to_pct(request.POST.get(f'pv_{p.id}_1'))
-                        imp.aliquota_ano2 = _to_pct(request.POST.get(f'pv_{p.id}_2'))
-                        imp.aliquota_ano3 = _to_pct(request.POST.get(f'pv_{p.id}_3'))
-                        imp.aliquota_ano4 = _to_pct(request.POST.get(f'pv_{p.id}_4'))
-                        imp.aliquota_ano5 = _to_pct(request.POST.get(f'pv_{p.id}_5'))
-                    to_update.append(imp)
-
-                ImpostoVendaItem.objects.bulk_update(
-                    to_update,
-                    ['aliquota_ano1', 'aliquota_ano2', 'aliquota_ano3', 'aliquota_ano4', 'aliquota_ano5']
-                )
-
-            # guarda o modo na sessão
-            request.session['impostos_modo'] = modo
-
-            messages.success(request, "Impostos salvos com sucesso!")
-            return redirect('impostos')  # PRG: novo GET vai ler do BD e preencher os campos
-
-        except Exception as e:
-            messages.error(request, f"Erro ao salvar: {e}")
-            # cai pro GET abaixo para renderizar com o que está no BD
-
-    # ----- GET (ou após redirect): montar contexto a partir do BD -----
-    lucro_cols = []
-    for ano, v in enumerate([
-        lucro.aliquota_ano1, lucro.aliquota_ano2, lucro.aliquota_ano3,
-        lucro.aliquota_ano4, lucro.aliquota_ano5
-    ], start=1):
-        v = v or Decimal("0")
-        lucro_cols.append({"ano": ano, "valor": v, "valor_str": f"{v:.2f}"})
-
-    linhas = []
-    for p in itens:
-        imp = existentes[p.id]
-        valores = [
-            imp.aliquota_ano1 or Decimal("0"),
-            imp.aliquota_ano2 or Decimal("0"),
-            imp.aliquota_ano3 or Decimal("0"),
-            imp.aliquota_ano4 or Decimal("0"),
-            imp.aliquota_ano5 or Decimal("0"),
-        ]
-        cols = []
-        for ano, v in enumerate(valores, start=1):
-            cols.append({"ano": ano, "valor": v, "valor_str": f"{v:.2f}"})
-        linhas.append({"id": p.id, "nome": p.nome, "cols": cols})
-
-    contexto = {
-        "modo": modo,
-        "lucro_cols": lucro_cols,
-        "linhas": linhas,
-    }
-    return render(request, 'planodenegocios/impostos.html', contexto)

@@ -1,4 +1,4 @@
- document.addEventListener('DOMContentLoaded', function () {
+document.addEventListener('DOMContentLoaded', function () {
     const tipoSelect = document.querySelector('select[name="tipo_de_produto"]');
     const margemContainer = document.getElementById('margem-lucro-container');
 
