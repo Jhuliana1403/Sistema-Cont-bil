@@ -39,20 +39,26 @@ urlpatterns = [
 
     # Investimentos e ampliações
     path('investimento/', views.investimento, name='investimento'),
+    path('investimento/editar/<int:investimento_id>/', views.editar_investimento, name='editar_investimento'),
+    path('ampliacao/editar/<int:ampliacao_id>/', views.editar_ampliacao, name='editar_ampliacao'),
+
     path('investimento/excluir/<int:investimento_id>/', views.excluir_investimento, name='excluir_investimento'),
     path('ampliacoes/excluir/<int:ampliacao_id>/', views.excluir_ampliacao, name='excluir_ampliacao'),
 
     # Equipe própia
     path('equipe-propria/', views.equipe_propria, name='equipe_propria'),
+    path('equipe_propria/editar/<int:funcionario_id>/', views.editar_funcionario, name='editar_funcionario'),
+
 
     #Prestadores de Serviço
     path('terceiros/', views.terceiros, name='terceiros'),
     path('terceiros/excluir/<int:pk>/', views.excluir_terceiro, name='excluir_terceiro'),
     path('terceiros/excluir-todos/', views.excluir_todos_terceiros, name='excluir_todos_terceiros'),
-
+    path('terceiros/editar/<int:id>/', views.editar_terceiro, name='editar_terceiro'),
 
     #Produtos e Serviços
     path('cadastrar_produtoservicos/', views.cadastrar_produto, name='cadastrar_produto'),
+    path('produto/editar/<int:produto_id>/', views.editar_produto, name='editar_produto'),
     path('produtoservicos/', views.produto, name='produto'),
     path('excluir_produtoservicos/<int:produto_id>', views.excluir_produto, name='excluir_produto'),
 
@@ -63,10 +69,15 @@ urlpatterns = [
     path('despesas/excluir/<int:mes>/<int:id>/', views.excluir_despesa, name='excluir_despesa'),
     path('despesas/credito-tributario/', views.credito_tributario_view, name='credito_tributario'),
 
+    #Visão Geral
+    path('relatório_geral/', views.visao_geral, name='relatorio_geral'),
+
+    #Relatório de PDF's
+    path('relatorio/pdf/', views.gerar_relatorio_pdf, name='relatorio_pdf'), 
+
     #despesas
     path('receitas/', views.receitas, name='receitas'),
 
-    #impostoso
+    #impostos
     path('impostos/', views.impostos, name='impostos')
-
 ]
