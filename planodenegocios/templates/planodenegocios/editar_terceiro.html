@@ -2,47 +2,61 @@
 {% load static %}
 
 {% block conteudo %}
-<div class="container my-5">
-  <div class="card shadow-lg border-0">
-    <div class="card-body">
-      <h2 class="card-title text-center mb-4">Editar Terceiro</h2>
+<div class="container my-5" style="max-width: 700px;">
+  <div class="card shadow border-0 rounded-4">
+    <div class="card-body p-5">
 
-      <!-- Mostrar mensagens de erro/sucesso -->
+      <h2 class="card-title text-center mb-5 fw-bold text-primary">Editar Terceiros</h2>
+
+      <!-- Mensagens Django -->
       {% if messages %}
-      <div class="messages">
         {% for message in messages %}
-          <div class="alert {% if message.tags %}alert-{{ message.tags }}{% endif %}">
+          <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
             {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
           </div>
         {% endfor %}
-      </div>
-      <script src="{% static 'js/delay_error.js' %}"></script>
+        <script src="{% static 'js/delay_error.js' %}"></script>
       {% endif %}
 
-      <form method="POST">
+      <form method="POST" action="" novalidate>
         {% csrf_token %}
-        <div class="mb-3">
-          <label for="nome" class="form-label">Nome</label>
-          <input type="text" class="form-control" id="nome" name="nome" value="{{ terceiro.nome }}" required>
+
+        <div class="mb-4">
+          <label for="nome" class="form-label fw-semibold">Nome</label>
+          <input type="text" id="nome" name="nome" class="form-control form-control-lg border-primary"
+                 placeholder="Informe o nome" value="{{ terceiro.nome }}" required autofocus>
         </div>
 
-        <div class="mb-3">
-          <label for="quantidade" class="form-label">Quantidade</label>
-          <input type="number" class="form-control" id="quantidade" name="quantidade" value="{{ terceiro.quantidade }}" min="1" required>
+        <div class="row g-4">
+          <div class="col-md-6">
+            <label for="quantidade" class="form-label fw-semibold">Quantidade</label>
+            <input type="number" id="quantidade" name="quantidade" class="form-control form-control-lg border-primary"
+                   min="1" value="{{ terceiro.quantidade }}" required>
+          </div>
+
+          <div class="col-md-6">
+            <label for="remuneracao" class="form-label fw-semibold">Remuneração (R$)</label>
+              <input type="number" id="remuneracao" name="remuneracao" class="form-control form-control-lg border-primary"
+                    step="0.01" min="0" value="{{ remuneracao_str }}" required>
+          </div>
         </div>
 
-        <div class="mb-3">
-          <label for="remuneracao" class="form-label">Remuneração (R$)</label>
-          <input type="text" class="form-control" id="remuneracao" name="remuneracao" value="{{ terceiro.remuneracao }}" required>
+        <div class="mt-5 d-flex justify-content-center gap-3">
+          <button type="submit" class="btn btn-lg btn-primary d-flex align-items-center px-4 gap-2">
+            <i class="bi bi-check2-circle fs-4"></i> Salvar Alterações
+          </button>
+          <a href="{% url 'terceiros' %}" class="btn btn-lg btn-outline-secondary d-flex align-items-center px-4 gap-2">
+            <i class="bi bi-x-circle fs-4"></i> Cancelar
+          </a>
         </div>
 
-        <div class="d-flex justify-content-between">
-          <a href="{% url 'terceiros' %}" class="btn btn-secondary">Cancelar</a>
-          <button type="submit" class="btn btn-primary">Salvar Alterações</button>
-        </div>
       </form>
-
     </div>
   </div>
 </div>
 {% endblock conteudo %}
+
+{% block extra_js %}
+<script src="{% static 'js/sidebar.js' %}"></script>
+{% endblock extra_js %}

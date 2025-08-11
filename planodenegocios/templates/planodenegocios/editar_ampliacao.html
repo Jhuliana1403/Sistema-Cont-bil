@@ -33,29 +33,32 @@
                                class="form-control form-control-lg border-primary" 
                                min="0" value="{{ ampliacao.quantidade|default_if_none:'0' }}" required>
                     </div>
-
-                    <div class="col-md-6">
-                        <label for="valor_unitario_ampliacao" class="form-label fw-semibold">Valor Unitário (R$)</label>
-                        <input type="number" id="valor_unitario_ampliacao" name="valor_unitario_ampliacao" 
-                               class="form-control form-control-lg border-primary" 
-                               step="0.01" min="0" value="{{ ampliacao.valor_unitario|default_if_none:0|floatformat:2 }}" required>
-                    </div>
+                <div class="col-md-6">
+                    <label for="quantidade_ampliacao" class="form-label fw-semibold">Quantidade</label>
+                    <input type="number" id="quantidade_ampliacao" name="quantidade_ampliacao" 
+                        class="form-control form-control-lg border-primary" 
+                        min="0" value="{{ quantidade_int }}" required>
                 </div>
 
-                <div class="row g-4 mt-3">
-                    <div class="col-md-6">
-                        <label for="depreciacao_ampliacao" class="form-label fw-semibold">Depreciação (%)</label>
-                        <input type="number" id="depreciacao_ampliacao" name="depreciacao_ampliacao" 
-                               class="form-control form-control-lg border-primary" 
-                               step="0.01" min="0" value="{{ ampliacao.depreciacao|default_if_none:0|floatformat:2 }}" required>
-                    </div>
+                <div class="col-md-6">
+                    <label for="valor_unitario_ampliacao" class="form-label fw-semibold">Valor Unitário (R$)</label>
+                    <input type="number" id="valor_unitario_ampliacao" name="valor_unitario_ampliacao" 
+                        class="form-control form-control-lg border-primary" 
+                        step="0.01" min="0" value="{{ valor_unitario_str }}" required>
+                </div>
 
-                    <div class="col-md-6">
-                        <label for="credito_ampliacao" class="form-label fw-semibold">Crédito (%)</label>
-                        <input type="number" id="credito_ampliacao" name="credito_ampliacao" 
-                               class="form-control form-control-lg border-primary" 
-                               step="0.01" min="0" value="{{ ampliacao.credito|default_if_none:0|floatformat:2 }}" required>
-                    </div>
+                <div class="col-md-6">
+                    <label for="depreciacao_ampliacao" class="form-label fw-semibold">Depreciação (%)</label>
+                    <input type="number" id="depreciacao_ampliacao" name="depreciacao_ampliacao" 
+                        class="form-control form-control-lg border-primary" 
+                        step="0.01" min="0" value="{{ depreciacao_str }}" required>
+                </div>
+
+                <div class="col-md-6">
+                    <label for="credito_ampliacao" class="form-label fw-semibold">Crédito (%)</label>
+                    <input type="number" id="credito_ampliacao" name="credito_ampliacao" 
+                        class="form-control form-control-lg border-primary" 
+                        step="0.01" min="0" value="{{ credito_str }}" required>
                 </div>
 
                 <div class="mt-5 d-flex justify-content-center gap-3">

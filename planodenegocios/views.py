@@ -378,7 +378,6 @@ def investimento(request):
         'tab_ativa': tab_ativa,
     })
 
-
 def editar_investimento(request, investimento_id):
     investimento = get_object_or_404(Investimento, id=investimento_id)
 
@@ -397,7 +396,7 @@ def editar_investimento(request, investimento_id):
         except (ValueError, TypeError):
             messages.error(request, 'Erro ao atualizar. Por favor, verifique os dados.')
 
-    # Corrigir possíveis None ou vazios
+    # Funções para evitar None e converter valores
     def safe_float(value):
         try:
             return float(value)
@@ -415,11 +414,17 @@ def editar_investimento(request, investimento_id):
     investimento.credito = safe_float(investimento.credito)
     investimento.quantidade = safe_int(investimento.quantidade)
 
+    # Formatar os valores para o template
+    valor_unitario_str = f"{investimento.valor_unitario:.2f}"
+    depreciacao_str = f"{investimento.depreciacao:.2f}"
+    credito_str = f"{investimento.credito:.2f}"
+
     return render(request, 'planodenegocios/editar_investimento.html', {
-        'investimento': investimento
+        'investimento': investimento,
+        'valor_unitario_str': valor_unitario_str,
+        'depreciacao_str': depreciacao_str,
+        'credito_str': credito_str,
     })
-
-
 
 def editar_ampliacao(request, ampliacao_id):
     ampliacao = get_object_or_404(Ampliacoes, id=ampliacao_id)
@@ -440,10 +445,19 @@ def editar_ampliacao(request, ampliacao_id):
         except (ValueError, TypeError):
             messages.error(request, 'Erro ao atualizar. Por favor, verifique os dados.')
 
-    # GET
+    # Preparar strings formatadas para o template
+    valor_unitario_str = f"{ampliacao.valor_unitario:.2f}" if ampliacao.valor_unitario else "0.00"
+    depreciacao_str = f"{ampliacao.depreciacao:.2f}" if ampliacao.depreciacao else "0.00"
+    credito_str = f"{ampliacao.credito:.2f}" if ampliacao.credito else "0.00"
+    quantidade_int = ampliacao.quantidade if ampliacao.quantidade else 0
+
     context = {
         'ampliacao': ampliacao,
-        'form_type': 'ampliacao'
+        'form_type': 'ampliacao',
+        'valor_unitario_str': valor_unitario_str,
+        'depreciacao_str': depreciacao_str,
+        'credito_str': credito_str,
+        'quantidade_int': quantidade_int,
     }
     return render(request, 'planodenegocios/editar_ampliacao.html', context)
 
@@ -460,7 +474,6 @@ def excluir_ampliacao(request, ampliacao_id):
     messages.success(request, f'A ampliação "{descricao}" foi excluída com sucesso!')
     url = reverse('investimento') + '?tab=ampliacao'  
     return redirect(url)
-
 
 def equipe_propria(request):
     aba_ativa = 'funcionario'  # aba padrão
@@ -608,7 +621,7 @@ def editar_funcionario(request, funcionario_id):
         try:
             quantidade = int(quantidade)
             salario = Decimal(salario)
-        except (ValueError, TypeError):
+        except (ValueError, TypeError, Decimal.InvalidOperation):
             messages.error(request, "Quantidade e salário devem ser números válidos.")
             return redirect('editar_funcionario', funcionario_id=funcionario_id)
 
@@ -619,9 +632,12 @@ def editar_funcionario(request, funcionario_id):
         messages.success(request, "Funcionário atualizado com sucesso!")
         return redirect('equipe_propria')
 
-    # GET - exibe o formulário com dados atuais
+    # Formatar salário com 2 casas decimais e ponto decimal
+    salario_str = f"{funcionario.salario_inicial:.2f}" if funcionario.salario_inicial else "0.00"
+
     context = {
         'funcionario': funcionario,
+        'salario_str': salario_str,
     }
     return render(request, 'planodenegocios/editar_funcionario.html', context)
 
@@ -687,13 +703,18 @@ def editar_terceiro(request, id):
         messages.success(request, "Prestador de serviço atualizado com sucesso!")
         return redirect('terceiros')
 
-    return render(request, 'planodenegocios/editar_terceiro.html', {'terceiro': terceiro})
+    # Preparar remuneração formatada para o template
+    remuneracao_str = f"{terceiro.remuneracao:.2f}" if terceiro.remuneracao else "0.00"
+
+    return render(request, 'planodenegocios/editar_terceiro.html', {
+        'terceiro': terceiro,
+        'remuneracao_str': remuneracao_str,
+    })
 
 def excluir_terceiro(request, pk):
     terceiro = get_object_or_404(Terceiro, pk=pk)
     terceiro.delete()
     return redirect('terceiros')
-
 
 def excluir_todos_terceiros(request):
     Terceiro.objects.all().delete()
@@ -826,7 +847,6 @@ def editar_produto(request, produto_id):
 
     else:
         # Caso GET, preenche os valores iniciais para exibir no formulário
-        # Pegando os custos relacionados, se existirem
         try:
             custo = CustoProducao.objects.get(produto=produto)
             frete = custo.frete
@@ -839,14 +859,15 @@ def editar_produto(request, produto_id):
         preco_compra = produto.preco_compra
         markup = produto.margem_lucro
 
+    # Formatação para duas casas decimais (string)
     contexto = {
         'produto': produto,
         'markup': markup,
-        'frete': frete,
-        'embalagem': embalagem,
-        'materia_prima': materia_prima,
-        'preco_venda_final': preco_venda_final,
-        'preco_compra': preco_compra,
+        'frete': f"{frete:.2f}",
+        'embalagem': f"{embalagem:.2f}",
+        'materia_prima': f"{materia_prima:.2f}",
+        'preco_venda_final': f"{preco_venda_final:.2f}",
+        'preco_compra': f"{preco_compra:.2f}",
     }
 
     return render(request, "planodenegocios/editar_produto.html", contexto)
@@ -856,7 +877,6 @@ def excluir_produto(request, produto_id):
     produto.delete()
     messages.success(request, f'O produto/serviço "{produto.nome}" foi excluído com sucesso!')
     return redirect('produto')
-
 
 #Despesas administrativas
 def despesas(request):
@@ -916,10 +936,13 @@ def editar_despesa(request, id, mes=None):
             messages.error(request, "Valor inválido.")
             return redirect('editar_despesa', id=id, mes=mes_post or mes)
 
-    # GET request: usa o mes recebido pela URL ou o mês da despesa
+    # GET request: formata valor com 2 casas decimais para exibir
+    valor_str = f"{despesa.valor:.2f}" if despesa.valor is not None else "0.00"
+
     return render(request, 'planodenegocios/editar_despesa.html', {
         'despesa': despesa,
         'mes': mes or despesa.mes,
+        'valor_str': valor_str,
     })
 
 def excluir_despesa(request, mes, id):
@@ -1232,7 +1255,7 @@ def visao_geral(request):
             'total_mensal': total_mensal,
         })
 
-    # Receitas (adicionado)
+    # Receitas
     itens = ProdutoServico.objects.only('id', 'nome', 'unidade_venda', 'preco_venda').order_by('nome')
     outras, _ = ReceitaNaoOperacional.objects.get_or_create(mes_referencia=1, descricao='Outras receitas')
 
@@ -1258,23 +1281,37 @@ def visao_geral(request):
 
     outras_receitas = outras.valor_inicial or Decimal("0")
 
+    # Dados de investimento e ampliação (incluindo totais)
+    investimentos = Investimento.objects.all()
+    total_investimentos = sum(i.total for i in investimentos)
+
+    ampliacoes = Ampliacoes.objects.all()
+    total_ampliacao = sum(a.total for a in ampliacoes)
+
     context = {
         'sections': sections,
-        'investimentos': Investimento.objects.all(),
-        'total_investimentos': sum(i.total for i in Investimento.objects.all()),
+        'investimentos': investimentos,
+        'total_investimentos': total_investimentos,
+        'ampliacoes': ampliacoes,
+        'total_ampliacao': total_ampliacao,
+
         'terceiros': Terceiro.objects.all(),
         'total_terceiros': sum(t.quantidade for t in Terceiro.objects.all()),
         'total_remuneracoes': sum(t.valor_inicial for t in Terceiro.objects.all()),
+
         'funcionarios': funcionarios_data,
         'total_funcionarios': sum(f['quantidade'] for f in funcionarios_data),
         'total_salarios': sum(f['total_mensal'] for f in funcionarios_data),
+
         'produtos': ProdutoServico.objects.all(),
         'custos': {c.produto: c for c in CustoProducao.objects.all()},
+
         'despesas': DespesaAdministrativa.objects.all(),
         'total_despesas': sum(d.valor for d in DespesaAdministrativa.objects.all()),
+
         'creditos': CreditoTributario.objects.select_related('despesa').all(),
         'total_credito': sum(((c.despesa.valor * c.aliquota) / 100) for c in CreditoTributario.objects.select_related('despesa').all()),
-        # Dados de receitas incluídos aqui:
+
         'linhas_receitas': linhas_receitas,
         'total_faturamento': total_faturamento,
         'outras_receitas': outras_receitas,
@@ -1457,9 +1494,25 @@ def gerar_relatorio_pdf(request):
     # --- Plano Financeiro: Investimentos ---
     investimentos = Investimento.objects.all()
     if investimentos.exists():
-        total = sum(item.total for item in investimentos)
+        total_investimentos = sum(item.total for item in investimentos)
         add_section("Plano Financeiro", "")
-        add_section("Investimentos", f"Total investido: R$ {total:,.2f}")
+        add_section("Investimentos", f"Total investido: R$ {total_investimentos:,.2f}")
+        for inv in investimentos:
+            elementos.append(Paragraph(
+                f"{inv.descricao or 'Item'} - Total: R$ {inv.total:,.2f}",
+                styles['BodyTextCustom']
+            ))
+
+    # --- Plano Financeiro: Ampliações ---
+    ampliacoes = Ampliacoes.objects.all()
+    if ampliacoes.exists():
+        total_ampliacoes = sum(item.total for item in ampliacoes)
+        add_section("Ampliações", f"Total ampliado: R$ {total_ampliacoes:,.2f}")
+        for amp in ampliacoes:
+            elementos.append(Paragraph(
+                f"{amp.descricao or 'Item'} - Total: R$ {amp.total:,.2f}",
+                styles['BodyTextCustom']
+            ))
 
     # --- Prestadores de Serviços ---
     terceiros = Terceiro.objects.all()
@@ -1489,7 +1542,6 @@ def gerar_relatorio_pdf(request):
                 f"<b>Preço de Venda:</b> R$ {produto.preco_venda:,.2f} | <b>Margem de Lucro:</b> {produto.margem_lucro:.2f}%",
                 styles['BodyTextCustom']))
 
-            # Aqui corrigido: buscar custo pelo objeto produto, não pelo nome
             custo = CustoProducao.objects.filter(produto=produto).first()
             if custo:
                 elementos.append(Paragraph(
@@ -1549,7 +1601,6 @@ def gerar_relatorio_pdf(request):
                 texto_item = f"{imp.item.nome}: " + ", ".join(f"Ano {i+1}: {ano:.2f}%" for i, ano in enumerate(anos))
                 elementos.append(Paragraph(texto_item, styles['BodyTextCustom']))
 
-    # Construção do PDF com watermark
     doc.build(elementos, canvasmaker=lambda *args, **kwargs: WatermarkCanvas(*args, logo_path=logo_path, **kwargs))
     buffer.seek(0)
     return FileResponse(buffer, as_attachment=True, filename='plano_de_negocios.pdf')
