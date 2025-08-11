@@ -15,7 +15,6 @@
     </a>
   </div>
 
-  <!-- Container com altura fixa e scroll -->
   <div class="report-container p-4 shadow rounded">
 
     {% for section, obj in sections %}
@@ -44,6 +43,54 @@
                 <tr>
                   <td>{{ i.descricao|default:"Item" }}</td>
                   <td>R$ {{ i.total|floatformat:2 }}</td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </section>
+    {% endif %}    {% if investimentos %}
+      <section class="mb-5">
+        <h2 class="h4 fw-semibold border-bottom pb-2 title-primary-color">Plano Financeiro - Investimentos</h2>
+        <p class="mt-3 text-paragraph-color"><strong>Total investido:</strong> R$ {{ total_investimentos|floatformat:2 }}</p>
+        <div class="table-responsive">
+          <table class="table-report">
+            <thead class="fw-semibold">
+              <tr>
+                <th>Descrição</th>
+                <th>Total</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for i in investimentos %}
+                <tr>
+                  <td>{{ i.descricao|default:"Item" }}</td>
+                  <td>R$ {{ i.total|floatformat:2 }}</td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </section>
+    {% endif %}
+
+    {% if ampliacoes %}
+      <section class="mb-5">
+        <h2 class="h4 fw-semibold border-bottom pb-2 title-primary-color">Plano Financeiro - Ampliações</h2>
+        <p class="mt-3 text-paragraph-color"><strong>Total ampliado:</strong> R$ {{ total_ampliacao|floatformat:2 }}</p>
+        <div class="table-responsive">
+          <table class="table-report">
+            <thead class="fw-semibold">
+              <tr>
+                <th>Descrição</th>
+                <th>Total</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for a in ampliacoes %}
+                <tr>
+                  <td>{{ a.descricao|default:"Item" }}</td>
+                  <td>R$ {{ a.total|floatformat:2 }}</td>
                 </tr>
               {% endfor %}
             </tbody>

@@ -2,29 +2,47 @@
 {% load static %}
 
 {% block conteudo %}
-<div class="container my-5" style="max-width: 600px;">
-  <h2 class="mb-4">Editar Funcionário</h2>
+<div class="container my-5" style="max-width: 700px;">
+  <div class="card shadow border-0 rounded-4">
+    <div class="card-body p-5">
 
-  <form method="POST" novalidate>
-    {% csrf_token %}
-    <div class="mb-3">
-      <label for="cargo" class="form-label">Cargo</label>
-      <input type="text" id="cargo" name="cargo" class="form-control" value="{{ funcionario.cargo }}" required autofocus>
+      <h2 class="card-title text-center mb-5 fw-bold text-primary">Editar Funcionário</h2>
+
+      <form method="POST" action="" novalidate>
+        {% csrf_token %}
+
+        <div class="mb-4">
+          <label for="cargo" class="form-label fw-semibold">Cargo</label>
+          <input type="text" id="cargo" name="cargo" class="form-control form-control-lg border-primary"
+                 placeholder="Informe o cargo" value="{{ funcionario.cargo }}" required autofocus>
+        </div>
+
+        <div class="row g-4">
+          <div class="col-md-6">
+            <label for="quantidade" class="form-label fw-semibold">Quantidade</label>
+            <input type="number" id="quantidade" name="quantidade" class="form-control form-control-lg border-primary"
+                   min="1" value="{{ funcionario.quantidade }}" required>
+          </div>
+
+          <div class="col-md-6">
+            <label for="salario_inicial" class="form-label fw-semibold">Salário Inicial (R$)</label>
+            <input type="number" id="salario_inicial" name="salario_inicial" class="form-control form-control-lg border-primary"
+                   step="0.01" min="0" value="{{ salario_str }}" required>
+          </div>
+        </div>
+
+        <div class="mt-5 d-flex justify-content-center gap-3">
+          <button type="submit" class="btn btn-lg btn-primary d-flex align-items-center px-4 gap-2">
+            <i class="bi bi-check2-circle fs-4"></i> Salvar Alterações
+          </button>
+          <a href="{% url 'equipe_propria' %}" class="btn btn-lg btn-outline-secondary d-flex align-items-center px-4 gap-2">
+            <i class="bi bi-x-circle fs-4"></i> Cancelar
+          </a>
+        </div>
+
+      </form>
     </div>
-
-    <div class="mb-3">
-      <label for="quantidade" class="form-label">Quantidade</label>
-      <input type="number" id="quantidade" name="quantidade" class="form-control" min="1" value="{{ funcionario.quantidade }}" required>
-    </div>
-
-    <div class="mb-3">
-      <label for="salario_inicial" class="form-label">Salário Inicial (R$)</label>
-      <input type="number" id="salario_inicial" name="salario_inicial" class="form-control" step="0.01" min="0" value="{{ funcionario.salario_inicial }}" required>
-    </div>
-
-    <button type="submit" class="btn btn-primary">Salvar Alterações</button>
-    <a href="{% url 'equipe_propria' %}" class="btn btn-secondary ms-2">Cancelar</a>
-  </form>
+  </div>
 </div>
 {% endblock %}
 
