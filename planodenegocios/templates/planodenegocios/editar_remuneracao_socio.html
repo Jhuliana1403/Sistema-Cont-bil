@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block conteudo %}
+<div class="container my-5" style="max-width: 700px;">
+  <div class="card shadow border-0 rounded-4">
+    <div class="card-body p-5">
+
+      <h2 class="card-title text-center mb-5 fw-bold text-primary">Editar Distribuição de Lucros</h2>
+      <p class="text-muted text-center mb-4">Altere o nome do sócio ou o valor inicial do lucro.</p>
+
+      {% if messages %}
+      <div class="messages mb-4">
+          {% for message in messages %}
+              <div class="alert {% if message.tags %}alert-{{ message.tags }}{% endif %}">
+                  {{ message }}
+              </div>
+          {% endfor %}
+      </div>
+      <script src="{% static 'js/delay_error.js' %}"></script>
+      {% endif %}
+
+      <form method="POST" novalidate>
+        {% csrf_token %}
+
+        <div class="mb-4">
+          <label for="nome_socio" class="form-label fw-semibold">Nome do Sócio</label>
+          <input type="text" id="nome_socio" name="nome_socio" class="form-control form-control-lg border-primary" 
+                 value="{{ distribuicao.socio.nome }}" required autofocus>
+        </div>
+
+        <div class="mb-4">
+          <label for="valor_inicial" class="form-label fw-semibold">Valor Inicial (mês 1)</label>
+          <div class="input-group input-group-lg">
+            <span class="input-group-text">R$</span>
+            <input type="text" id="valor_inicial" name="valor_inicial" class="form-control text-end border-primary" 
+                   value="{{ valor_formatado }}" required>
+          </div>
+        </div>
+
+        <div class="mt-5 d-flex justify-content-center gap-3">
+          <button type="submit" class="btn btn-lg btn-primary d-flex align-items-center px-4 gap-2">
+            <i class="bi bi-check2-circle fs-4"></i> Salvar Alterações
+          </button>
+          <a href="{% url 'remuneracao_dos_socios' %}" class="btn btn-lg btn-outline-secondary d-flex align-items-center px-4 gap-2">
+            <i class="bi bi-x-circle fs-4"></i> Cancelar
+          </a>
+        </div>
+
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock conteudo %}
+
+{% block extra_js %}
+<script src="{% static 'js/sidebar.js' %}"></script>
+{% endblock extra_js %}

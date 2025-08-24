@@ -1,0 +1,63 @@
+{% load static %}
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Comparativo com Mercado</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <h2>Investimentos</h2>
+    <canvas id="comparativoInvestimentos"></canvas>
+
+    <h2>Ampliações</h2>
+    <canvas id="comparativoAmpliacoes"></canvas>
+
+    <h2>Funcionários</h2>
+    <canvas id="comparativoFuncionarios"></canvas>
+
+    <h2>Produtos</h2>
+    <canvas id="comparativoProdutos"></canvas>
+
+    <h2>Receitas</h2>
+    <canvas id="comparativoReceitas"></canvas>
+
+    <script>
+    const coresNegocio = "#36A2EB";  // azul
+    const coresMercado = "#FF6384";  // rosa
+
+    function criarPizzaComparativa(canvasId, labels, negocio, mercado) {
+        new Chart(document.getElementById(canvasId), {
+            type: 'pie',
+            data: {
+                labels: labels.map(l => l + " (Negócio)"),
+                datasets: [
+                    {
+                        label: 'Negócio',
+                        data: negocio,
+                        backgroundColor: labels.map(() => coresNegocio)
+                    },
+                    {
+                        label: 'Mercado',
+                        data: mercado,
+                        backgroundColor: labels.map(() => coresMercado)
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: { position: 'bottom' },
+                    title: { display: true, text: 'Comparativo Negócio vs Mercado' }
+                }
+            }
+        });
+    }
+
+    criarPizzaComparativa('comparativoInvestimentos', {{ investimentos_labels|safe }}, {{ investimentos_totais|safe }}, {{ mercado_investimentos|safe }});
+    criarPizzaComparativa('comparativoAmpliacoes', {{ ampliacoes_labels|safe }}, {{ ampliacoes_totais|safe }}, {{ mercado_ampliacoes|safe }});
+    criarPizzaComparativa('comparativoFuncionarios', {{ funcionarios_labels|safe }}, {{ funcionarios_totais|safe }}, {{ mercado_funcionarios|safe }});
+    criarPizzaComparativa('comparativoProdutos', {{ produtos_labels|safe }}, {{ produtos_totais|safe }}, {{ mercado_produtos|safe }});
+    criarPizzaComparativa('comparativoReceitas', {{ receitas_labels|safe }}, {{ receitas_totais|safe }}, {{ mercado_receitas|safe }});
+    </script>
+</body>
+</html>

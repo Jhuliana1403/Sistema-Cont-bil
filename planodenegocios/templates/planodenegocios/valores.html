@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% load static %}
+{% block conteudo %}
+
+<div class="container my-5">
+  <div class="card shadow-lg border-0">
+    <div class="card-body">
+
+      <div class="tabs-modern mb-4 d-flex gap-2 justify-content-center">
+        <a href="{% url 'remuneracao_dos_socios' %}" class="tab-btn text-decoration-none">Remuneração dos Sócios</a>
+        <button class="tab-btn tab-btn-active">Valores</button>
+      </div>
+
+      <h2 class="card-title text-center mb-3">Distribuição de Valores por Mês</h2>
+      <p class="text-muted text-center mb-4">Visualize os valores distribuídos a cada sócio por mês.</p>
+
+      <div class="table-responsive rounded">
+        <table class="table table-hover table-bordered align-middle text-center shadow-sm bg-white rounded">
+          <thead class="table-primary text-dark">
+            <tr>
+              <th>Sócio</th>
+              {% for mes in meses %}
+              <th>{{ mes }}º mês</th>
+              {% endfor %}
+            </tr>
+          </thead>
+          <tbody>
+            {% for socio in socios_valores %}
+            <tr>
+              <td>{{ socio.nome }}</td>
+              {% for valor in socio.valores %}
+              <td>R$ {{ valor|default:"0,00" }}</td>
+              {% endfor %}
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+    </div>
+  </div>
+</div>
+{% endblock %}
+{% block extra_js %}
+  <script src="{% static 'js/sidebar.js' %}"></script>
+  <script src="{% static 'js/adicionar_linha.js' %}"></script>
+  <script src="{% static 'js/botao-ativacao.js' %}"></script>
+  <script src="{% static 'js/calculo-markup.js' %}"></script>
+{% endblock extra_js %}
