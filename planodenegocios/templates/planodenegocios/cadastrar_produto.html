@@ -68,39 +68,23 @@
                   {% endfor %}
                   <td><input type="number" step="0.01" id="input-nova-embalagem" name="nova_embalagem" class="form-control" placeholder="Embalagem"></td>
                 </tr>
-
-                <!-- Novas linhas para categorias adicionais -->
-                {% comment %} {% for coluna in colunas_adicionais %}
-                <tr>
-                  <th>{{ coluna.titulo }}</th>
-                  {% for produto in produtos %}
-                    <td><input type="number" step="0.01" name="{{ coluna.nome }}_{{ forloop.counter }}" class="form-control"></td>
-                  {% endfor %}
-                  <td>
-                    <input 
-                      type="number" step="0.01" 
-                      class="form-control nova-coluna-{{ coluna.nome }}" 
-                      placeholder="{{ coluna.titulo }}" 
-                      name="nova_{{ coluna.nome }}" 
-                    >
-                  </td>
-                </tr>
-                {% endfor %} {% endcomment %}
-                </tr>
-              </tbody>
-            </table>
-
-            {% comment %} <div class="mt-3 d-flex gap-2 align-items-center">
-              <input type="text" id="input-novo-titulo-coluna" class="form-control w-auto" placeholder="Novo título do item">
-              <button type="button" class="btn btn-success" id="btn-adicionar-coluna">Adicionar item</button>
-            </div> {% endcomment %}
-
             <div class="text-center mt-4">
               <button type="submit" class="btn-salvar">Salvar</button>
             </div>
 
           </div>
       </form>
+          <div class="footer-notes mt-4 p-3 border-top bg-light rounded">
+          <strong>Orientação:</strong> 
+          Indique e configure o mix de produtos e serviços oferecidos pelo empreendimento. 
+          <ul>
+          <li>Presta serviços ou vende produtos? Produtos feitos pela empresa ou recende produtos de terceiros? Vende, aluga ou licencia? Pagamento único ou recorrente?</li>
+          <li>Os produtos são vendidos unitariamente ou em lotes/pacotes?</li>
+          <li>Qual o preço? A política de preço prevê variação do preço ao longo do tempo?</li>
+          <li>Quais os custos com fretes, embalagens e matéria-prima?</li>
+          <li>Se o empreendimento compra e revende produtos/serviços, indique qual a Margem de Lucro Bruta praticada.</li>
+          </ul> 
+        </div>
     </div>
   </div>
 </div>

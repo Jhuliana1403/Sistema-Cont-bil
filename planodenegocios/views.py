@@ -4,12 +4,14 @@ from django.shortcuts import render, redirect, get_object_or_404
 from decimal import Decimal, InvalidOperation
 
 from .models import Investimento, CreditoTributario, AlternativasEstrategicas, Cronograma, FatoresCriticosSucesso, GestaoQualidade, Ampliacoes, ProdutoServico, CustoProducao
-from .models import Funcionario, EncargoGlobal, DespesaAdministrativa, DespesaMensal, ResumoExecutivo, HistoricoMotivacao, ModeloNegocio, CaracteristicasBeneficios, EstagioDesenvolvimento
+from .models import Funcionario, EncargoGlobal, Socio, DespesaAdministrativa, DespesaMensal, ResumoExecutivo, HistoricoMotivacao, ModeloNegocio, CaracteristicasBeneficios, EstagioDesenvolvimento
 from .models import AnaliseSetor, MercadoPotencial, AnaliseConcorrencia, Posicionamento, FocoSegmentacao, PlanoPenetracaoMercado, ProdutosServicosInsumos, DescricaoLegalEstruturaSocietaria
-from .models import Equipe,Terceiro, TerceirizacaoEquipeApoio, DistribuicaoComercializacao, AliancasParcerias, PesquisaDesenvolvimentoInovacao, AnaliseRiscos
+from .models import Equipe,Terceiro, DistribuicaoLucro, Empresa, ValorMensalDistribuicao, TerceirizacaoEquipeApoio, DistribuicaoComercializacao, AliancasParcerias, PesquisaDesenvolvimentoInovacao, AnaliseRiscos
 from .models import ReceitaOperacional, ReceitaNaoOperacional, ProdutoServico, ImpostoLucro, ImpostoVendaItem
 
 from django.contrib import messages
+
+from datetime import date
 
 from django.urls import reverse
 
@@ -878,6 +880,132 @@ def excluir_produto(request, produto_id):
     messages.success(request, f'O produto/serviço "{produto.nome}" foi excluído com sucesso!')
     return redirect('produto')
 
+#Valores
+def remuneracao_dos_socios(request):
+    empresa_obj, _ = Empresa.objects.get_or_create(nome="Empresa Padrão")
+
+    if request.method == 'POST':
+        socios_valores = []
+
+        # Percorre os inputs do formulário
+        for key, value in request.POST.items():
+            if key.startswith('socio_'):
+                index = key.split('_')[1]
+                nome_socio = value.strip()
+
+                valor_str = request.POST.get(f'valor_{index}', '0').replace(',', '.').strip()
+                try:
+                    valor = float(valor_str)
+                except ValueError:
+                    valor = 0
+
+                if nome_socio:
+                    socios_valores.append((nome_socio, valor))
+
+        # Salva ou atualiza sócios e distribuições
+        for nome_socio, valor in socios_valores:
+            socio_obj, _ = Socio.objects.get_or_create(nome=nome_socio)
+
+            distribuicao_obj, created = DistribuicaoLucro.objects.get_or_create(
+                socio=socio_obj,
+                empresa=empresa_obj,
+                defaults={'valor_inicial': valor, 'mes_referencia': date.today()}
+            )
+            if not created:
+                distribuicao_obj.valor_inicial = valor
+                distribuicao_obj.mes_referencia = date.today()
+                distribuicao_obj.save()
+
+        messages.success(request, "Distribuição de lucros salva ou atualizada com sucesso!")
+        return redirect('remuneracao_dos_socios')
+
+    # GET: busca distribuições apenas da empresa atual
+    distribuicoes = DistribuicaoLucro.objects.select_related('socio').filter(empresa=empresa_obj)
+
+    # Adiciona atributo valor_formatado para exibição
+    for dist in distribuicoes:
+        dist.valor_formatado = f"{dist.valor_inicial:.2f}".replace('.', ',')
+
+    return render(request, 'planodenegocios/remuneracao_dos_socios.html', {
+        'distribuicoes': distribuicoes
+    })
+
+def distribuicao_valores_view(request):
+    distribuicoes = DistribuicaoLucro.objects.select_related('socio').all()
+    socios_valores = []
+
+    for dist in distribuicoes:
+        # Garante que existam 12 valores mensais
+        if not dist.valores_mensais.exists():
+            for mes in range(1, 13):
+                ValorMensalDistribuicao.objects.create(
+                    distribuicao=dist,
+                    mes=mes,
+                    valor=dist.valor_inicial,
+                    constante=True
+                )
+
+        valores_mensais = dist.valores_mensais.order_by('mes')
+        valores = [f"{v.valor:.2f}".replace('.', ',') for v in valores_mensais]
+
+        socios_valores.append({
+            'nome': dist.socio.nome,
+            'valores': valores,
+        })
+
+    return render(request, 'planodenegocios/valores.html', {
+        'socios_valores': socios_valores,
+        'meses': range(1, 13)
+    })
+
+def editar_remuneracao_socio(request, socio_id):
+    """
+    View para editar a distribuição de lucros de um sócio específico.
+    """
+    empresa_obj, _ = Empresa.objects.get_or_create(nome="Empresa Padrão")
+    distribuicao = get_object_or_404(DistribuicaoLucro, id=socio_id, empresa=empresa_obj)
+
+    if request.method == 'POST':
+        nome_socio = request.POST.get('nome_socio', '').strip()
+        valor_str = request.POST.get('valor_inicial', '0').replace(',', '.').strip()
+
+        try:
+            valor = float(valor_str)
+        except ValueError:
+            valor = 0
+
+        if nome_socio:
+            # Atualiza o nome do sócio
+            distribuicao.socio.nome = nome_socio
+            distribuicao.socio.save()
+
+            # Atualiza o valor inicial e a data
+            distribuicao.valor_inicial = valor
+            distribuicao.mes_referencia = date.today()
+            distribuicao.save()
+
+            messages.success(request, f"Distribuição de {nome_socio} atualizada com sucesso!")
+            return redirect('remuneracao_dos_socios')
+        else:
+            messages.error(request, "O nome do sócio não pode ficar vazio.")
+
+    # Formata valor para exibição
+    valor_formatado = f"{distribuicao.valor_inicial:.2f}".replace('.', ',')
+
+    return render(request, 'planodenegocios/editar_remuneracao_socio.html', {
+        'distribuicao': distribuicao,
+        'valor_formatado': valor_formatado,
+    })
+
+def excluir_distribuicao(request, pk):
+    empresa_obj, _ = Empresa.objects.get_or_create(nome="Empresa Padrão")
+
+    distribuicao = get_object_or_404(DistribuicaoLucro, pk=pk, empresa=empresa_obj)
+    distribuicao.delete()
+
+    messages.success(request, "Distribuição excluída com sucesso!")
+    return redirect('remuneracao_dos_socios')
+    
 #Despesas administrativas
 def despesas(request):
     # Redireciona para o mês 1 por padrão
@@ -1249,7 +1377,7 @@ def visao_geral(request):
     for f in funcionarios:
         total_mensal = f.quantidade * f.salario_inicial
         funcionarios_data.append({
-            'nome': f.cargo,
+            'cargo': f.cargo,
             'quantidade': f.quantidade,
             'salario_inicial': f.salario_inicial,
             'total_mensal': total_mensal,
@@ -1288,6 +1416,9 @@ def visao_geral(request):
     ampliacoes = Ampliacoes.objects.all()
     total_ampliacao = sum(a.total for a in ampliacoes)
 
+    distribuicoes = DistribuicaoLucro.objects.all()
+    total_distribuicao = sum(d.valor_inicial for d in distribuicoes)
+
     context = {
         'sections': sections,
         'investimentos': investimentos,
@@ -1302,6 +1433,9 @@ def visao_geral(request):
         'funcionarios': funcionarios_data,
         'total_funcionarios': sum(f['quantidade'] for f in funcionarios_data),
         'total_salarios': sum(f['total_mensal'] for f in funcionarios_data),
+        
+        'distribuicoes': distribuicoes,
+        'total_distribuicao': total_distribuicao,
 
         'produtos': ProdutoServico.objects.all(),
         'custos': {c.produto: c for c in CustoProducao.objects.all()},
@@ -1529,6 +1663,17 @@ def gerar_relatorio_pdf(request):
         total_salarios = sum(f.quantidade * f.salario_inicial for f in funcionarios)
         add_section("Equipe Própria", 
                     f"Total de Funcionários: {total_funcionarios}\nTotal de Salários Mensais: R$ {total_salarios:,.2f}")
+
+    # --- Distribuição de Lucros e Remuneração dos Sócios ---
+    distribuicoes = DistribuicaoLucro.objects.all()
+    if distribuicoes.exists():
+        total_distribuicao = sum(d.valor_inicial for d in distribuicoes)
+        add_section("Distribuição de Lucros e Remuneração dos Sócios", f"Total: R$ {total_distribuicao:,.2f}")
+        for d in distribuicoes:
+            elementos.append(Paragraph(
+                f"{d.socio.nome} - Valor Inicial: R$ {d.valor_inicial:,.2f}",
+                styles['BodyTextCustom']
+            ))
 
     # --- Produtos e Serviços detalhados ---
     produtos = ProdutoServico.objects.all()

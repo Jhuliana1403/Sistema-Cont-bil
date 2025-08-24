@@ -226,6 +226,69 @@ class Ampliacoes(models.Model):
     def __str__(self):
         return self.descricao
 
+#Valores
+class Empresa(models.Model):
+    nome = models.CharField('Nome da Empresa', max_length=100)
+
+    def __str__(self):
+        return self.nome
+    
+class Socio(models.Model):
+    """
+    Cadastro muito simples de sócios.
+    Você pode trocar por um relacionamento com o usuário do Django,
+    se já existir um módulo de pessoas/usuários no seu sistema.
+    """
+    nome = models.CharField('Nome do sócio', max_length=100)
+
+    def __str__(self):
+        return self.nome
+
+class DistribuicaoLucro(models.Model):
+    socio = models.ForeignKey(
+        Socio,
+        verbose_name='Sócio',
+        on_delete=models.CASCADE,
+        related_name='distribuicoes'
+        
+    )
+    valor_inicial = models.DecimalField(
+        'Valor inicial (mês 1)',
+        max_digits=12,
+        decimal_places=2,
+        default=0
+    )
+    empresa = models.ForeignKey(
+        Empresa,  # ou Projeto
+        on_delete=models.CASCADE,
+        related_name='distribuicoes_lucro'
+    )
+    mes_referencia = models.DateField('Mês de Referência')  # ex: 2025-07-01
+
+    class Meta:
+        verbose_name = 'Remuneração dos Sócios – Lucros e Dividendos'
+        verbose_name_plural = verbose_name
+
+    def __str__(self):
+        return f"{self.socio} - {self.mes_referencia.strftime('%m/%Y')} - R$ {self.valor_inicial}"
+
+class ValorMensalDistribuicao(models.Model):
+    distribuicao = models.ForeignKey(
+        'DistribuicaoLucro',  # referencia a remuneração
+        on_delete=models.CASCADE,
+        related_name='valores_mensais'
+    )
+    mes = models.PositiveIntegerField()  # 1 a 12
+    valor = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    constante = models.BooleanField(default=True)  # Se os valores são constantes
+
+    class Meta:
+        verbose_name = 'Valor Mensal da Distribuição'
+        verbose_name_plural = 'Valores Mensais das Distribuições'
+
+    def __str__(self):
+        return f"{self.distribuicao.socio.nome} - Mês {self.mes}: R$ {self.valor}"
+    
 #Equipe própria
 class Funcionario(models.Model):
     cargo = models.CharField(max_length=100)

@@ -156,6 +156,34 @@
         </div>
       </section>
     {% endif %}
+    
+    {% if distribuicoes %}
+    <section class="mb-5">
+    <h2 class="h4 fw-semibold border-bottom pb-2 title-primary-color">Distribuição de Lucros</h2> 
+      <div class="table-responsive">
+        <table class="table-report">
+          <thead class="fw-semibold">
+            <th>Sócio</th>
+            <th>Valor Inicial</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for dist in distribuicoes %}
+          <tr>
+            <td>{{ dist.socio.nome }}</td>
+            <td>R$ {{ dist.valor_inicial|floatformat:2 }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+        <tfoot>
+          <tr>
+            <td>Total</td>
+            <td>R$ {{ total_distribuicao|floatformat:2 }}</td>
+          </tr>
+        </tfoot>
+        </table>
+      </div>
+    {% endif %}
 
     {% if produtos %}
       <section class="mb-5">

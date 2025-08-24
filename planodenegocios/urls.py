@@ -69,6 +69,12 @@ urlpatterns = [
     path('despesas/excluir/<int:mes>/<int:id>/', views.excluir_despesa, name='excluir_despesa'),
     path('despesas/credito-tributario/', views.credito_tributario_view, name='credito_tributario'),
 
+    #Valores
+    path('remuneracao_dos_socios/', views.remuneracao_dos_socios, name='remuneracao_dos_socios'),
+    path('valores/', views.distribuicao_valores_view, name='valores'),
+    path('remuneracao_dos_socios/editar/<int:socio_id>/', views.editar_remuneracao_socio, name='editar_remuneracao_socio'),
+    path('remuneracao_dos_socios/excluir/<int:pk>/', views.excluir_distribuicao, name='excluir_distribuicao'),
+
     #Visão Geral
     path('relatório_geral/', views.visao_geral, name='relatorio_geral'),
 
